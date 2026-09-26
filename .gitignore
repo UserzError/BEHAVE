@@ -1,0 +1,12 @@
+# Python virtual environment
+backend/venv/
+
+# SQLite database (created automatically when the app runs)
+backend/responses.db
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store

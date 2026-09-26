@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Self-Driving Dilemmas</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="telemetry.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <!-- 1. Intro / consent -->
+    <section id="intro-screen">
+      <h1 tabindex="-1">Self-Driving Dilemmas</h1>
+      <p>A self-driving car's brakes have failed. In each scenario, you decide what it should do. There are no right answers.</p>
+      <p>Along with your choice, we record how long you take to decide, how long your pointer rests on each option, and whether you change your mind before confirming. We don't collect your name, email or any other personal information.</p>
+      <button type="button" id="start-btn" class="primary" disabled>Loading…</button>
+      <p id="data-notice" class="notice" hidden>Demo mode: the backend isn't running, so these are sample scenarios and your answers won't be saved.</p>
+    </section>
+
+    <!-- 2. One scenario at a time -->
+    <section id="scenario-screen" hidden>
+      <p id="progress" class="progress"></p>
+      <h2 id="scenario-text" tabindex="-1"></h2>
+      <p class="hint">Pick an option, then confirm. You can switch before confirming.</p>
+      <div class="options">
+        <button type="button" class="option" id="option-A" aria-pressed="false"></button>
+        <button type="button" class="option" id="option-B" aria-pressed="false"></button>
+      </div>
+      <button type="button" id="confirm-btn" class="primary" disabled>Confirm choice</button>
+    </section>
+
+    <!-- 3. Done -->
+    <section id="done-screen" hidden>
+      <h2 tabindex="-1">Thank you!</h2>
+      <p>Your answers have been recorded. See how everyone else decided, and how long they hesitated.</p>
+      <a class="primary" href="results.html">See the results</a>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,193 @@
+/* Shared styles for index.html and results.html */
+
+:root {
+  color-scheme: light;
+  --bg: #f9f9f7;
+  --surface: #fcfcfb;
+  --text: #0b0b0b;
+  --text-muted: #52514e;
+  --border: #d9d8d1;
+  --accent: #2a78d6;
+  --accent-text: #ffffff;
+  --accent-soft: #e6f0fc;
+  --road: #4a4a48;
+  --road-line: #e8e6dc;
+  --notice-bg: #fff4d6;
+  --radius: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0d0d0d;
+    --surface: #1a1a19;
+    --text: #ffffff;
+    --text-muted: #c3c2b7;
+    --border: #383835;
+    --accent: #3987e5;
+    --accent-text: #ffffff;
+    --accent-soft: #16263a;
+    --road: #2c2c2a;
+    --road-line: #898781;
+    --notice-bg: #3a300f;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d0d0d;
+  --surface: #1a1a19;
+  --text: #ffffff;
+  --text-muted: #c3c2b7;
+  --border: #383835;
+  --accent: #3987e5;
+  --accent-text: #ffffff;
+  --accent-soft: #16263a;
+  --road: #2c2c2a;
+  --road-line: #898781;
+  --notice-bg: #3a300f;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+h1, h2 { line-height: 1.2; text-wrap: balance; }
+h1 { font-size: 2rem; margin: 0 0 16px; }
+h2 { font-size: 1.5rem; margin: 0 0 8px; }
+h1:focus, h2:focus { outline: none; }
+
+.progress, .hint { color: var(--text-muted); margin: 0 0 8px; }
+.hint { margin-bottom: 20px; }
+
+.notice {
+  background: var(--notice-bg);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+/* ---------- Buttons ---------- */
+
+.primary {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+button:focus-visible, a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---------- The two option cards ---------- */
+
+.options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 640px) {
+  .options { grid-template-columns: 1fr; }
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 18px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.option:hover { border-color: var(--text-muted); }
+.option[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.option[aria-pressed="true"] .option-letter::after { content: " · Selected"; }
+
+.option-letter {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.option[aria-pressed="true"] .option-letter { color: var(--accent); }
+
+.option-label { font-size: 1.2rem; font-weight: 600; }
+
+/* The road: victims ahead on the left, the car on the right driving toward them. */
+.lane {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 84px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background:
+    repeating-linear-gradient(90deg, var(--road-line) 0 18px, transparent 18px 36px)
+      center / 100% 3px no-repeat,
+    var(--road);
+  font-size: 2rem;
+  line-height: 1;
+}
+.lane-ahead { display: flex; flex-wrap: wrap; gap: 4px; }
+.car { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.car .victim { font-size: 1.4rem; }
+
+.signal, .summary { font-size: 0.95rem; }
+.summary { font-weight: 600; }
+
+/* ---------- Results page ---------- */
+
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 20px 0;
+}
+.chart-card h2 { font-size: 1.15rem; }
+.chart-card p { color: var(--text-muted); margin: 0 0 12px; }
+.chart-box { position: relative; }
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+th { color: var(--text-muted); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td:first-child { white-space: nowrap; }

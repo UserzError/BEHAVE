@@ -1,0 +1,56 @@
+[
+  {
+    "id": "s1",
+    "text": "The car's brakes have failed. What should it do?",
+    "options": {
+      "A": {
+        "action": "stay",
+        "label": "Stay in lane",
+        "victims": ["man", "woman", "child", "child", "elderly"],
+        "signal": "red"
+      },
+      "B": {
+        "action": "swerve",
+        "label": "Swerve into the barrier",
+        "victims": ["passenger"],
+        "signal": "none"
+      }
+    }
+  },
+  {
+    "id": "s2",
+    "text": "The car's brakes have failed. What should it do?",
+    "options": {
+      "A": {
+        "action": "stay",
+        "label": "Stay in lane",
+        "victims": ["elderly", "elderly"],
+        "signal": "green"
+      },
+      "B": {
+        "action": "swerve",
+        "label": "Swerve into the other lane",
+        "victims": ["child", "child"],
+        "signal": "red"
+      }
+    }
+  },
+  {
+    "id": "s3",
+    "text": "The car's brakes have failed. What should it do?",
+    "options": {
+      "A": {
+        "action": "stay",
+        "label": "Stay in lane",
+        "victims": ["dog", "dog", "dog"],
+        "signal": "green"
+      },
+      "B": {
+        "action": "swerve",
+        "label": "Swerve into the other lane",
+        "victims": ["man"],
+        "signal": "green"
+      }
+    }
+  }
+]

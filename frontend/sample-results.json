@@ -1,0 +1,5 @@
+[
+  { "scenario_id": "s1", "votes": { "A": 18, "B": 24 }, "avg_decision_ms": 9120, "changed_rate": 0.31 },
+  { "scenario_id": "s2", "votes": { "A": 11, "B": 31 }, "avg_decision_ms": 6480, "changed_rate": 0.14 },
+  { "scenario_id": "s3", "votes": { "A": 37, "B": 5 },  "avg_decision_ms": 3210, "changed_rate": 0.05 }
+]
