@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scenario Designer</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="scenario-view.js" defer></script>
+  <script src="admin.js" defer></script>
+</head>
+<body>
+  <main class="admin">
+    <header class="admin-header">
+      <div>
+        <h1>Scenario designer</h1>
+        <p class="progress">Build scenarios, then export <code>scenarios.json</code> and put it in <code>backend/</code>.</p>
+      </div>
+      <div class="toolbar">
+        <label class="secondary file-button">Import JSON…
+          <input type="file" id="import-input" accept=".json,application/json" hidden>
+        </label>
+        <button type="button" id="copy-btn" class="secondary">Copy JSON</button>
+        <button type="button" id="export-btn" class="primary">Export scenarios.json</button>
+      </div>
+    </header>
+    <p id="status" class="notice" hidden></p>
+
+    <div class="admin-layout">
+      <!-- Left: list of scenarios + templates for new ones -->
+      <aside class="scenario-list">
+        <h2>Scenarios</h2>
+        <ul id="scenario-list"></ul>
+        <h3>Add a scenario</h3>
+        <div id="template-buttons" class="template-buttons"></div>
+        <button type="button" id="reset-btn" class="link-button">Discard draft and reload</button>
+      </aside>
+
+      <!-- Right: editor for the selected scenario -->
+      <section id="editor" class="editor">
+        <div class="editor-top">
+          <label>ID <input id="scenario-id" autocomplete="off" spellcheck="false"></label>
+          <label class="grow">Question <input id="scenario-text" autocomplete="off"></label>
+          <div class="editor-actions">
+            <button type="button" id="duplicate-btn" class="secondary">Duplicate</button>
+            <button type="button" id="delete-btn" class="secondary danger">Delete</button>
+          </div>
+        </div>
+        <div id="option-editors" class="options"></div>
+      </section>
+    </div>
+
+    <section id="problems" class="problems" hidden>
+      <h2>Fix before exporting</h2>
+      <ul id="problem-list"></ul>
+    </section>
+  </main>
+
+  <!-- One copy of this is made for option A and one for option B -->
+  <template id="option-editor-template">
+    <fieldset class="option-editor">
+      <legend></legend>
+      <label>Button label <input data-field="label" autocomplete="off"></label>
+      <label>What the car does
+        <select data-field="action">
+          <option value="stay">Stay in lane</option>
+          <option value="swerve">Swerve</option>
+        </select>
+      </label>
+      <fieldset class="signal-picker">
+        <legend>Crossing signal (only when pedestrians are hit)</legend>
+        <label><input type="radio" value="none" data-field="signal"> None</label>
+        <label><input type="radio" value="green" data-field="signal"> 🟢 Legal</label>
+        <label><input type="radio" value="red" data-field="signal"> 🔴 Illegal</label>
+      </fieldset>
+      <p class="field-title">Who dies? Click to add (up to 5). Passengers ride in the car and hit a barrier.</p>
+      <div class="palette"></div>
+      <div class="victim-chips" aria-live="polite"></div>
+      <p class="field-title">Preview</p>
+      <div class="option preview"></div>
+    </fieldset>
+  </template>
+</body>
+</html>

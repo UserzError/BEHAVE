@@ -1,21 +1,5 @@
 // app.js — participant flow: intro → one screen per scenario → thank-you.
-// Uses the tracking functions from telemetry.js (loaded before this file).
-
-// One emoji and a singular/plural name per allowed victim type (see CLAUDE.md).
-const VICTIMS = {
-  man:       { emoji: "👨", one: "man", many: "men" },
-  woman:     { emoji: "👩", one: "woman", many: "women" },
-  child:     { emoji: "🧒", one: "child", many: "children" },
-  elderly:   { emoji: "🧓", one: "elderly person", many: "elderly people" },
-  passenger: { emoji: "🧑", one: "passenger", many: "passengers" },
-  dog:       { emoji: "🐕", one: "dog", many: "dogs" },
-};
-
-const SIGNALS = {
-  green: "🟢 Pedestrians are crossing on a green light (legally)",
-  red:   "🔴 Pedestrians are crossing on a red light (illegally)",
-  none:  "",
-};
+// Uses telemetry.js (tracking) and scenario-view.js (drawing), both loaded before this file.
 
 const sessionId = crypto.randomUUID(); // random, per participant — no personal info
 let scenarios = [];
@@ -24,14 +8,6 @@ let selected = null;   // "A", "B", or null
 let demoMode = false;  // true when the backend isn't running; responses are logged, not sent
 
 const $ = (id) => document.getElementById(id);
-
-// Small helper: make an element with a class and optional text.
-function el(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text) node.textContent = text;
-  return node;
-}
 
 // ---------- Loading ----------
 
@@ -46,47 +22,6 @@ async function loadScenarios() {
     const res = await fetch("sample-scenarios.json");
     return res.json();
   }
-}
-
-// ---------- Drawing a scenario ----------
-
-// "1 man, 2 children and 1 dog"
-function describeVictims(victims) {
-  const counts = {};
-  for (const v of victims) counts[v] = (counts[v] || 0) + 1;
-  const parts = Object.entries(counts).map(([type, n]) =>
-    `${n} ${n === 1 ? VICTIMS[type].one : VICTIMS[type].many}`
-  );
-  if (parts.length <= 1) return parts.join("");
-  return parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1];
-}
-
-// Fill one option button: label, a drawn lane, the crossing signal, and a plain-text summary.
-function drawOption(button, letter, option) {
-  button.replaceChildren();
-
-  button.append(el("span", "option-letter", `Option ${letter}`));
-  button.append(el("span", "option-label", option.label));
-
-  // The lane picture is decorative; the summary line below says the same thing in words.
-  const lane = el("span", "lane");
-  lane.setAttribute("aria-hidden", "true");
-  const passengers = option.victims.filter((v) => v === "passenger");
-  const pedestrians = option.victims.filter((v) => v !== "passenger");
-
-  const ahead = el("span", "lane-ahead");
-  if (passengers.length > 0) ahead.append(el("span", "barrier", "🧱"));
-  for (const v of pedestrians) ahead.append(el("span", "victim", VICTIMS[v].emoji));
-  lane.append(ahead);
-
-  const car = el("span", "car");
-  for (const v of passengers) car.append(el("span", "victim", VICTIMS[v].emoji));
-  car.append(el("span", "car-icon", "🚗"));
-  lane.append(car);
-  button.append(lane);
-
-  if (SIGNALS[option.signal]) button.append(el("span", "signal", SIGNALS[option.signal]));
-  button.append(el("span", "summary", `Killed: ${describeVictims(option.victims)}`));
 }
 
 function showScenario() {
