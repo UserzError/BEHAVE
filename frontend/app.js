@@ -62,10 +62,11 @@ async function sendResponse(response) {
     return;
   }
   try {
+    // Send the JSON to the backend
     const res = await fetch("/response", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(response),
+      body: JSON.stringify(response), // object -> JSON text
     });
     if (!res.ok) console.error("POST /response failed:", res.status, await res.text());
   } catch (err) {
@@ -78,11 +79,12 @@ async function confirmChoice() {
   if (!selected) return;
   const scenario = scenarios[current];
   // Read telemetry immediately, so the network request doesn't add to decision time.
+  // JSON body for POST /response
   const response = {
-    session_id: sessionId,
+    session_id: sessionId,   // random id for this participant
     scenario_id: scenario.id,
-    choice: selected,
-    ...getTelemetry(),
+    choice: selected,        // final confirmed choice, "A" or "B"
+    ...getTelemetry(),       // adds first_choice, decision_ms, hover_ms, changed_answer
   };
 
   $("confirm-btn").disabled = true;

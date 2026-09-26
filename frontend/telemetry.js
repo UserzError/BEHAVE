@@ -44,10 +44,11 @@ function getTelemetry() {
   // Close out any hover still in progress so it counts.
   hoverEnd("A");
   hoverEnd("B");
+  // Telemetry fields of the POST /response JSON
   return {
-    first_choice: firstChoice,
-    decision_ms: Math.round(performance.now() - scenarioStartTime),
-    hover_ms: { A: Math.round(hoverTotals.A), B: Math.round(hoverTotals.B) },
-    changed_answer: switched,
+    first_choice: firstChoice,                                                // first option clicked
+    decision_ms: Math.round(performance.now() - scenarioStartTime),           // ms from scenario shown to confirm
+    hover_ms: { A: Math.round(hoverTotals.A), B: Math.round(hoverTotals.B) }, // total hover ms per option
+    changed_answer: switched,                                                 // true if they switched options
   };
 }
