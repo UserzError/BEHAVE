@@ -7,7 +7,11 @@ Demonstration: https://youtu.be/XgMI82CFvCY?is=2KBMzWzaALXyrDO6
 
 For our stack, we are using React.js for the frontend, and we are using Flask and SQLite on the backend.
 
-We used AI (Opus 5.5) in the process of building this website; for the majority of the frontend, and assisting with designing and orchestrating the backend. AI was not used in deciding the designs of the poll scenarios themselves.
+### Disclaimers:
+
+- We used AI (Opus 5.5) in the process of building this website; for the majority of the frontend, and assisting with designing and orchestrating the backend. AI was not used in deciding the designs of the poll scenarios themselves.
+
+- We are not using the data compiled from testing or demonstrations for any research whatsoever.
 
 ## Running it locally
 
