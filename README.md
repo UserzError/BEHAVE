@@ -1,5 +1,5 @@
 ## **B**ehavioral **E**valuation of **H**uman **A**ttitudes towards **V**ehicle **E**thics
-*A project from hackUMBC '26, Inspired by [moralmachine.net](https://www.moralmachine.net). *
+*A project from hackUMBC '26, Inspired by* [moralmachine.net](https://www.moralmachine.net). 
 
 This tool is intended to demonstrate the potential methods for polling for public consensus on autonomous vehicle ethics. 
 
