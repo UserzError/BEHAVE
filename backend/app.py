@@ -29,13 +29,20 @@ def load_env_file(path):
     """Read KEY=value lines from backend/.env into the environment, so secrets stay out of the code."""
     if not os.path.exists(path):
         return
-    with open(path) as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, value = line.split("=", 1)
-            os.environ.setdefault(key.strip(), value.strip())
+    with open(path, "rb") as f:
+        raw = f.read()
+    # Windows PowerShell often saves text as UTF-16 or as UTF-8 with a hidden marker (BOM) at the start,
+    # so check for those before reading it as normal text.
+    if raw.startswith((b"\xff\xfe", b"\xfe\xff")):
+        text = raw.decode("utf-16")
+    else:
+        text = raw.decode("utf-8-sig")  # utf-8-sig also removes a UTF-8 BOM if there is one
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
 load_env_file(os.path.join(HERE, ".env"))
@@ -158,6 +165,8 @@ def delete_scenario(scenario_id):
 
 
 if __name__ == "__main__":
-    if not ADMIN_TOKEN:
+    if ADMIN_TOKEN:
+        print(f"Admin token loaded ({len(ADMIN_TOKEN)} characters). Use it at http://localhost:5173/#/admin")
+    else:
         print("Note: ADMIN_TOKEN is not set, so the scenario designer can't save. See backend/.env.example")
     app.run(port=5000, debug=True)
