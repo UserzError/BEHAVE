@@ -4,6 +4,7 @@
 Inspired by [moralmachine.net](https://www.moralmachine.net).
 
 This tool is intended to demonstrate the potential methods for polling for public consensus on autonomous vehicle ethics. 
+Demonstration: https://youtu.be/XgMI82CFvCY?is=2KBMzWzaALXyrDO6
 
 For our stack, we are using React.js for the frontend, and we are using Flask and SQLite on the backend.
 
