@@ -42,3 +42,65 @@ export function pedestrianLanes(dilemma) {
   const d = DILEMMAS[dilemma]
   return [d.stay, d.swerve].filter((place) => place !== 'car')
 }
+
+// ---------- Scenario helpers (v2 format, see ADMIN_BUILDER.md) ----------
+
+export const MAX_GROUP = 5
+
+// Suggested button labels for each dilemma type. Used for new scenarios, and when the
+// dilemma changes while a label still has its suggested text.
+export const DEFAULT_LABELS = {
+  peds_vs_peds: { stay: 'Stay in lane', swerve: 'Swerve into the other lane' },
+  peds_ahead_vs_car: { stay: 'Stay in lane', swerve: 'Swerve into the barrier' },
+  car_vs_peds_other: { stay: 'Stay and hit the barrier', swerve: 'Swerve into the other lane' },
+}
+
+export function blankScenario() {
+  return {
+    title: '',
+    description: '',
+    text: "The car's brakes have failed. What should it do?",
+    dilemma: 'peds_vs_peds',
+    signals: { ahead: 'none', other: 'none' },
+    outcomes: {
+      stay: { label: DEFAULT_LABELS.peds_vs_peds.stay, group: [] },
+      swerve: { label: DEFAULT_LABELS.peds_vs_peds.swerve, group: [] },
+    },
+  }
+}
+
+// Switch dilemma type: keep both groups (they just change meaning), reset signals that no
+// longer apply to 'none', and update labels that still have the old suggested text.
+export function withDilemma(scenario, dilemma) {
+  const lanes = pedestrianLanes(dilemma)
+  const next = structuredClone(scenario)
+  next.dilemma = dilemma
+  for (const lane of ['ahead', 'other']) {
+    if (!lanes.includes(lane)) next.signals[lane] = 'none'
+  }
+  for (const outcome of ['stay', 'swerve']) {
+    if (next.outcomes[outcome].label === DEFAULT_LABELS[scenario.dilemma][outcome]) {
+      next.outcomes[outcome].label = DEFAULT_LABELS[dilemma][outcome]
+    }
+  }
+  return next
+}
+
+// What's missing before a scenario can be saved (empty list = ready).
+export function missingForSave(scenario) {
+  const missing = []
+  if (!scenario.title.trim()) missing.push('a title')
+  if (scenario.outcomes.stay.group.length === 0) missing.push('at least one character in Stay')
+  if (scenario.outcomes.swerve.group.length === 0) missing.push('at least one character in Swerve')
+  if (!scenario.outcomes.stay.label.trim() || !scenario.outcomes.swerve.label.trim()) missing.push('both button labels')
+  return missing
+}
+
+// ["man", "man", "doctor_f"] -> "2 × Man, Doctor (woman)" — a text version of a group, for screen
+// readers and the summary line under each option.
+export function describeGroup(group, labelFor) {
+  const counts = new Map()
+  for (const p of group) counts.set(p.type, (counts.get(p.type) || 0) + 1)
+  if (counts.size === 0) return 'nobody'
+  return [...counts].map(([type, n]) => (n > 1 ? `${n} × ${labelFor(type)}` : labelFor(type))).join(', ')
+}

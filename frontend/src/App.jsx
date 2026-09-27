@@ -8,13 +8,23 @@
 import { useEffect, useState } from 'react'
 import Poll from './Poll.jsx'
 import Results from './Results.jsx'
-import Designer from './Designer.jsx'
+import AdminApp from './AdminApp.jsx'
 import Gallery from './Gallery.jsx'
 import ScenesDemo from './ScenesDemo.jsx'
 import { loadScenarios } from './api.js'
 
 // Random id for this participant, made once per page load. No personal info is collected.
 const sessionId = crypto.randomUUID()
+
+// Fisher–Yates shuffle (returns a new array).
+function shuffle(list) {
+  const copy = [...list]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
 
 function useHash() {
   const [hash, setHash] = useState(window.location.hash)
@@ -38,7 +48,7 @@ export default function App() {
     return <main className="page page-wide"><Gallery /></main>
   }
   if (hash === '#/admin') {
-    return <main className="page page-admin"><Designer /></main>
+    return <main className="page page-admin"><AdminApp /></main>
   }
   return <PollFlow />
 }
@@ -49,7 +59,8 @@ function PollFlow() {
   const [screen, setScreen] = useState('intro') // 'intro' | 'poll' | 'done'
 
   useEffect(() => {
-    loadScenarios().then(setData).catch((err) => {
+    // Everyone sees the scenarios in a different random order.
+    loadScenarios().then(({ scenarios, demo }) => setData({ scenarios: shuffle(scenarios), demo })).catch((err) => {
       console.error(err)
       setError(true)
     })

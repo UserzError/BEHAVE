@@ -165,9 +165,11 @@ function Car({ passengers, atRisk }) {
 function Path({ outcome }) {
   const startX = CAR.x + CAR.width / 2
   const endX = outcome === 'stay' ? startX : LANES.other.x + LANES.other.width / 2
+  // The arrow stops a little short of the crossing, so it never runs into a front-row skull.
+  const tipY = CROSSING.bottom + 18
   const d = outcome === 'stay'
-    ? `M${startX} ${CAR.y - 6} L${endX} ${CROSSING.bottom + 2}`
-    : `M${startX} ${CAR.y - 6} C${startX} ${CAR.y - 44} ${endX} ${CROSSING.bottom + 52} ${endX} ${CROSSING.bottom + 2}`
+    ? `M${startX} ${CAR.y - 6} L${endX} ${tipY + 2}`
+    : `M${startX} ${CAR.y - 6} C${startX} ${CAR.y - 40} ${endX} ${tipY + 44} ${endX} ${tipY + 2}`
   const label = outcome === 'stay' ? "Car's path if it stays in its lane" : "Car's path if it swerves into the other lane"
   return (
     <g data-label={label} role="img" aria-label={label}>
@@ -175,7 +177,7 @@ function Path({ outcome }) {
       <path d={d} style={{ fill: 'none', stroke: 'transparent', strokeWidth: 16 }} />
       <path d={d} style={{ fill: 'none', stroke: 'var(--scene-path)', strokeWidth: 4, strokeDasharray: '10 8', strokeLinecap: 'round' }} />
       <path
-        d={`M${endX - 11} ${CROSSING.bottom + 12} L${endX} ${CROSSING.bottom - 1} L${endX + 11} ${CROSSING.bottom + 12}`}
+        d={`M${endX - 11} ${tipY + 12} L${endX} ${tipY} L${endX + 11} ${tipY + 12}`}
         style={{ fill: 'none', stroke: 'var(--scene-path)', strokeWidth: 5, strokeLinecap: 'round', strokeLinejoin: 'round' }}
       />
     </g>

@@ -1,10 +1,12 @@
 // The poll: one scenario at a time. Pick A or B (you can switch), then confirm.
 import { useEffect, useRef, useState } from 'react'
-import OptionCard from './OptionCard.jsx'
+import HoverLabels from './HoverLabels.jsx'
+import ScenarioOption from './ScenarioOption.jsx'
 import { sendResponse } from './api.js'
 import { useTelemetry } from './useTelemetry.js'
 
 const LETTERS = ['A', 'B']
+const OUTCOME_FOR = { A: 'stay', B: 'swerve' } // A = stay, B = swerve
 
 export default function Poll({ scenarios, demo, sessionId, onDone }) {
   const [index, setIndex] = useState(0)         // which scenario is on screen
@@ -53,20 +55,22 @@ export default function Poll({ scenarios, demo, sessionId, onDone }) {
       <h1 ref={headingRef} tabIndex={-1}>What should the car do?</h1>
       <p className="muted">Scenario {index + 1} of {scenarios.length} · Pick one, then confirm. You can switch first.</p>
 
-      <div className="options">
+      {/* resting the pointer on anything in a scene for 2 seconds shows what it is */}
+      <HoverLabels className="options">
         {LETTERS.map((letter) => (
-          <OptionCard
+          <ScenarioOption
             key={letter}
             ref={(node) => { optionRefs.current[letter] = node }}
             letter={letter}
-            option={scenario.options[letter]}
+            outcome={OUTCOME_FOR[letter]}
+            scenario={scenario}
             selected={selected === letter}
             onSelect={select}
             onHoverStart={hoverStart}
             onHoverEnd={hoverEnd}
           />
         ))}
-      </div>
+      </HoverLabels>
 
       <button type="button" className="primary" disabled={!selected || sending} onClick={confirm}>
         Confirm choice

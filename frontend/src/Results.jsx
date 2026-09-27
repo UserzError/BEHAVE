@@ -37,10 +37,11 @@ function buildRows(results, scenarios) {
       return {
         ...r,
         name: `Scenario ${i + 1}`,
-        labelA: s ? s.options.A.label : 'Option A',
-        labelB: s ? s.options.B.label : 'Option B',
-        killedA: s ? s.options.A.victims.length : '?',
-        killedB: s ? s.options.B.victims.length : '?',
+        title: s ? s.title : `${r.scenario_id} (deleted)`,
+        labelA: s ? s.outcomes.stay.label : 'Option A (stay)',
+        labelB: s ? s.outcomes.swerve.label : 'Option B (swerve)',
+        killedA: s ? s.outcomes.stay.group.length : '?',
+        killedB: s ? s.outcomes.swerve.group.length : '?',
         pctA,
         pctB: total ? 100 - pctA : 0,
         avgSeconds: Math.round(r.avg_decision_ms / 100) / 10, // one decimal place
@@ -179,7 +180,7 @@ export default function Results() {
                 <tbody>
                   {rows.map((r) => (
                     <tr key={r.scenario_id}>
-                      <td className="nowrap">{r.name}</td>
+                      <td><span className="nowrap">{r.name}</span><br /><span className="muted">{r.title}</span></td>
                       <td>{r.labelA} ({r.killedA} killed)</td>
                       <td>{r.labelB} ({r.killedB} killed)</td>
                       <td className="num">{r.votes.A} ({r.pctA}%)</td>

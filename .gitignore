@@ -2,7 +2,10 @@
 backend/venv/
 
 # SQLite database (created automatically when the app runs)
-backend/responses.db
+backend/*.db
+
+# Backup made by backend/migrate_v1.py
+backend/scenarios.v1.bak.json
 
 # Python cache files
 __pycache__/
