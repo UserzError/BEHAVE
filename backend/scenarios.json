@@ -123,5 +123,286 @@
         ]
       }
     }
+  },
+  {
+    "id": "s4",
+    "title": "Pregnant vs. Doctor",
+    "description": "",
+    "text": "The car's brakes have failed. What should it do?",
+    "dilemma": "peds_vs_peds",
+    "signals": {
+      "ahead": "none",
+      "other": "none"
+    },
+    "outcomes": {
+      "stay": {
+        "label": "Stay in lane",
+        "group": [
+          {
+            "type": "pregnant",
+            "fate": "killed"
+          }
+        ]
+      },
+      "swerve": {
+        "label": "Swerve into the other lane",
+        "group": [
+          {
+            "type": "doctor_f",
+            "fate": "killed"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "s5",
+    "title": "Average adults vs. Larger Adults",
+    "description": "",
+    "text": "The car's brakes have failed. What should it do?",
+    "dilemma": "peds_ahead_vs_car",
+    "signals": {
+      "ahead": "none",
+      "other": "none"
+    },
+    "outcomes": {
+      "stay": {
+        "label": "Stay in lane",
+        "group": [
+          {
+            "type": "man",
+            "fate": "killed"
+          },
+          {
+            "type": "woman",
+            "fate": "killed"
+          }
+        ]
+      },
+      "swerve": {
+        "label": "Swerve into the barrier",
+        "group": [
+          {
+            "type": "large_man",
+            "fate": "killed"
+          },
+          {
+            "type": "large_woman",
+            "fate": "killed"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "s6",
+    "title": "General male vs. female",
+    "description": "",
+    "text": "The car's brakes have failed. What should it do?",
+    "dilemma": "peds_vs_peds",
+    "signals": {
+      "ahead": "none",
+      "other": "none"
+    },
+    "outcomes": {
+      "stay": {
+        "label": "Stay in lane",
+        "group": [
+          {
+            "type": "woman",
+            "fate": "killed"
+          },
+          {
+            "type": "girl",
+            "fate": "killed"
+          },
+          {
+            "type": "elderly_woman",
+            "fate": "killed"
+          },
+          {
+            "type": "executive_f",
+            "fate": "killed"
+          },
+          {
+            "type": "doctor_f",
+            "fate": "killed"
+          }
+        ]
+      },
+      "swerve": {
+        "label": "Swerve into the other lane",
+        "group": [
+          {
+            "type": "man",
+            "fate": "killed"
+          },
+          {
+            "type": "boy",
+            "fate": "killed"
+          },
+          {
+            "type": "elderly_man",
+            "fate": "killed"
+          },
+          {
+            "type": "executive_m",
+            "fate": "killed"
+          },
+          {
+            "type": "doctor_m",
+            "fate": "killed"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "s7",
+    "title": "burgalar red vs man green",
+    "description": "",
+    "text": "The car's brakes have failed. What should it do?",
+    "dilemma": "peds_vs_peds",
+    "signals": {
+      "ahead": "green",
+      "other": "red"
+    },
+    "outcomes": {
+      "stay": {
+        "label": "Stay in lane",
+        "group": [
+          {
+            "type": "man",
+            "fate": "killed"
+          }
+        ]
+      },
+      "swerve": {
+        "label": "Swerve into the other lane",
+        "group": [
+          {
+            "type": "criminal",
+            "fate": "killed"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "s8",
+    "title": "5 dogs into barrier vs. swerve to stroller",
+    "description": "",
+    "text": "The car's brakes have failed. What should it do?",
+    "dilemma": "car_vs_peds_other",
+    "signals": {
+      "ahead": "none",
+      "other": "none"
+    },
+    "outcomes": {
+      "stay": {
+        "label": "Stay and hit the barrier",
+        "group": [
+          {
+            "type": "dog",
+            "fate": "killed"
+          },
+          {
+            "type": "dog",
+            "fate": "killed"
+          },
+          {
+            "type": "dog",
+            "fate": "killed"
+          },
+          {
+            "type": "dog",
+            "fate": "killed"
+          },
+          {
+            "type": "dog",
+            "fate": "killed"
+          }
+        ]
+      },
+      "swerve": {
+        "label": "Swerve into the other lane",
+        "group": [
+          {
+            "type": "baby",
+            "fate": "killed"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "s9",
+    "title": "vigilante case",
+    "description": "",
+    "text": "The car's brakes have failed. What should it do?",
+    "dilemma": "peds_vs_peds",
+    "signals": {
+      "ahead": "green",
+      "other": "red"
+    },
+    "outcomes": {
+      "stay": {
+        "label": "Stay in lane",
+        "group": [
+          {
+            "type": "doctor_m",
+            "fate": "killed"
+          }
+        ]
+      },
+      "swerve": {
+        "label": "Swerve into the other lane",
+        "group": [
+          {
+            "type": "criminal",
+            "fate": "killed"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "s10",
+    "title": "execs vs regular adults",
+    "description": "",
+    "text": "The car's brakes have failed. What should it do?",
+    "dilemma": "peds_vs_peds",
+    "signals": {
+      "ahead": "none",
+      "other": "none"
+    },
+    "outcomes": {
+      "stay": {
+        "label": "Stay in lane",
+        "group": [
+          {
+            "type": "executive_m",
+            "fate": "killed"
+          },
+          {
+            "type": "executive_f",
+            "fate": "killed"
+          }
+        ]
+      },
+      "swerve": {
+        "label": "Swerve into the other lane",
+        "group": [
+          {
+            "type": "man",
+            "fate": "killed"
+          },
+          {
+            "type": "woman",
+            "fate": "killed"
+          }
+        ]
+      }
+    }
   }
 ]
