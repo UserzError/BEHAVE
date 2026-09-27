@@ -1,0 +1,147 @@
+/* Global styles for the poll */
+
+:root {
+  color-scheme: light;
+  --bg: #f9f9f7;
+  --surface: #fcfcfb;
+  --text: #0b0b0b;
+  --text-muted: #52514e;
+  --border: #d9d8d1;
+  --accent: #2a78d6;
+  --red: #e34948;   /* option A placeholder */
+  --blue: #2a78d6;  /* option B placeholder */
+  --notice-bg: #fff4d6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0d0d0d;
+    --surface: #1a1a19;
+    --text: #ffffff;
+    --text-muted: #c3c2b7;
+    --border: #383835;
+    --accent: #3987e5;
+    --red: #e66767;
+    --blue: #3987e5;
+    --notice-bg: #3a300f;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d0d0d;
+  --surface: #1a1a19;
+  --text: #ffffff;
+  --text-muted: #c3c2b7;
+  --border: #383835;
+  --accent: #3987e5;
+  --red: #e66767;
+  --blue: #3987e5;
+  --notice-bg: #3a300f;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+h1 { font-size: clamp(1.6rem, 5vw, 2.2rem); line-height: 1.2; margin: 0 0 8px; text-wrap: balance; }
+h1:focus { outline: none; }
+.muted { color: var(--text-muted); }
+
+.notice {
+  background: var(--notice-bg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0 0 24px;
+}
+
+.primary {
+  padding: 12px 32px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---------- Poll ---------- */
+
+.poll { text-align: center; }
+.poll .muted { margin: 0 0 28px; }
+
+.options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(12px, 4vw, 32px);
+  margin-bottom: 32px;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* The placeholder picture: a rounded square, red for A and blue for B. */
+.square {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 20px;
+  color: #fff;
+  font-size: clamp(2.5rem, 10vw, 4.5rem);
+  font-weight: 800;
+  outline: 4px solid transparent;
+  outline-offset: 4px;
+  transition: transform 0.15s ease, outline-color 0.15s ease;
+}
+.option-A .square { background: var(--red); }
+.option-B .square { background: var(--blue); }
+
+.option:hover .square { transform: translateY(-3px); }
+.option[aria-pressed="true"] .square { outline-color: var(--text); }
+.option:focus-visible { outline: none; }
+.option:focus-visible .square { outline-color: var(--accent); }
+
+.option-label { font-weight: 700; font-size: 1.1rem; }
+.selected-tag { font-weight: 600; color: var(--text-muted); }
+.option-summary { color: var(--text-muted); font-size: 0.95rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .square { transition: none; }
+  .option:hover .square { transform: none; }
+}
+
+/* ---------- Intro / thank-you ---------- */
+
+.intro { max-width: 600px; margin: 0 auto; }
+.intro .primary { margin-top: 12px; }
