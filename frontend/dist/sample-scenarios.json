@@ -1,0 +1,127 @@
+[
+  {
+    "id": "s1",
+    "title": "Scenario s1",
+    "description": "",
+    "text": "The car's brakes have failed. What should it do?",
+    "dilemma": "peds_ahead_vs_car",
+    "signals": {
+      "ahead": "red",
+      "other": "none"
+    },
+    "outcomes": {
+      "stay": {
+        "label": "Stay in lane",
+        "group": [
+          {
+            "type": "man",
+            "fate": "killed"
+          },
+          {
+            "type": "woman",
+            "fate": "killed"
+          },
+          {
+            "type": "boy",
+            "fate": "killed"
+          },
+          {
+            "type": "girl",
+            "fate": "killed"
+          },
+          {
+            "type": "elderly_man",
+            "fate": "killed"
+          }
+        ]
+      },
+      "swerve": {
+        "label": "Swerve into the barrier",
+        "group": [
+          {
+            "type": "man",
+            "fate": "killed"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "s2",
+    "title": "Scenario s2",
+    "description": "",
+    "text": "The car's brakes have failed. What should it do?",
+    "dilemma": "peds_vs_peds",
+    "signals": {
+      "ahead": "green",
+      "other": "red"
+    },
+    "outcomes": {
+      "stay": {
+        "label": "Stay in lane",
+        "group": [
+          {
+            "type": "elderly_man",
+            "fate": "killed"
+          },
+          {
+            "type": "elderly_woman",
+            "fate": "killed"
+          }
+        ]
+      },
+      "swerve": {
+        "label": "Swerve into the other lane",
+        "group": [
+          {
+            "type": "boy",
+            "fate": "killed"
+          },
+          {
+            "type": "girl",
+            "fate": "killed"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "s3",
+    "title": "Scenario s3",
+    "description": "",
+    "text": "The car's brakes have failed. What should it do?",
+    "dilemma": "peds_vs_peds",
+    "signals": {
+      "ahead": "green",
+      "other": "green"
+    },
+    "outcomes": {
+      "stay": {
+        "label": "Stay in lane",
+        "group": [
+          {
+            "type": "dog",
+            "fate": "killed"
+          },
+          {
+            "type": "dog",
+            "fate": "killed"
+          },
+          {
+            "type": "dog",
+            "fate": "killed"
+          }
+        ]
+      },
+      "swerve": {
+        "label": "Swerve into the other lane",
+        "group": [
+          {
+            "type": "man",
+            "fate": "killed"
+          }
+        ]
+      }
+    }
+  }
+]
