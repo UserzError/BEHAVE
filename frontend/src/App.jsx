@@ -85,7 +85,7 @@ function PollFlow() {
         <section className="intro">
           <h1>Thank you!</h1>
           <p>{data.demo ? 'That was the demo. Nothing was saved.' : 'Your answers have been recorded.'}</p>
-          <a className="primary" href="#/results">See the results</a>
+          <a className="primary" href="#/results">See how you compare</a>
         </section>
       )}
     </main>

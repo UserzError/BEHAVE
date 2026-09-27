@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
 import { loadResults } from './api.js'
+import { loadMyAnswers } from './myAnswers.js'
+import YourComparison from './YourComparison.jsx'
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 ChartJS.defaults.font.family = 'system-ui, -apple-system, "Segoe UI", sans-serif'
@@ -66,6 +68,7 @@ export default function Results() {
 
   const rows = buildRows(data.results, data.scenarios)
   const totalVotes = rows.reduce((sum, r) => sum + r.votes.A + r.votes.B, 0)
+  const seeded = rows.reduce((sum, r) => sum + (r.seeded ?? 0), 0) // simulated answers (seed_responses.py)
 
   // Chart colors: A and B match the poll's red and blue squares.
   const colors = {
@@ -139,11 +142,19 @@ export default function Results() {
         <strong>For demonstration purposes only.</strong> This data will not be used for research.
       </p>
       {data.demo && <p className="notice">Demo mode: the backend isn't running, so this is sample data.</p>}
+      {seeded > 0 && (
+        <p className="muted small">
+          Includes {seeded} simulated answers generated for this demo (loosely based on trends reported in Awad et al., 2018).
+        </p>
+      )}
+
+      {rows.length > 0 && <YourComparison rows={rows} mine={loadMyAnswers()} />}
 
       {rows.length === 0 ? (
         <p className="muted">No answers yet.</p>
       ) : (
         <>
+          <h2 className="section-heading">Everyone's answers</h2>
           <p className="muted">{totalVotes} answers across {rows.length} scenarios.</p>
 
           <div className="card">

@@ -18,10 +18,11 @@ export async function loadScenarios() {
   }
 }
 
+// Returns true if the answer was saved on the server.
 export async function sendResponse(response, demo) {
   if (demo) {
     console.log('Demo mode — would POST /response:', response)
-    return
+    return false
   }
   try {
     // Send the JSON to the backend
@@ -31,9 +32,11 @@ export async function sendResponse(response, demo) {
       body: JSON.stringify(response), // object -> JSON text
     })
     if (!res.ok) console.error('POST /response failed:', res.status, await res.text())
+    return res.ok
   } catch (err) {
     // Keep the participant moving even if one save fails.
     console.error('POST /response failed:', err)
+    return false
   }
 }
 

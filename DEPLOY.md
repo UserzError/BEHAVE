@@ -53,8 +53,13 @@ Do this whenever you change the site or the scenarios, then redo step 4 on Pytho
    - **Virtualenv:** `/home/YOURNAME/BEHAVE/backend/venv`
    - **WSGI configuration file:** click the link, delete everything in it, and paste the contents of
      `backend/pythonanywhere_wsgi.py` (with `YOURNAME` replaced). Save.
-3. Click the green **Reload** button at the top of the Web tab.
-4. Open `https://YOURNAME.pythonanywhere.com`. The poll should load with your scenarios.
+3. Optional: add simulated answers so the results page isn't empty (tagged as simulated; remove them later
+   with `--remove`):
+   ```bash
+   cd ~/BEHAVE/backend && venv/bin/python seed_responses.py
+   ```
+4. Click the green **Reload** button at the top of the Web tab.
+5. Open `https://YOURNAME.pythonanywhere.com`. The poll should load with your scenarios.
    - Scenario designer: `https://YOURNAME.pythonanywhere.com/#/admin` (enter the token from step 2.3)
    - Results: `https://YOURNAME.pythonanywhere.com/#/results`
 

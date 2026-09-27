@@ -588,3 +588,59 @@ td.nowrap, .nowrap { white-space: nowrap; }
 @media (max-width: 720px) {
   .steps, .about-grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- Results: "How you compare" ---------- */
+
+.section-heading { margin: 32px 0 4px; font-size: 1.4rem; }
+.compare { margin-top: 20px; }
+.compare > h2 { margin: 0 0 6px; font-size: 1.4rem; }
+.compare-summary { margin: 0 0 14px; }
+.compare-empty { text-align: left; }
+.compare-empty h2 { margin: 0 0 6px; }
+.compare-empty .primary { display: inline-block; text-decoration: none; }
+
+.compare-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (max-width: 720px) {
+  .compare-grid { grid-template-columns: 1fr; }
+}
+.compare-card { margin: 0; display: grid; gap: 10px; align-content: start; }
+.compare-card h3 { margin: 0; font-size: 1.05rem; }
+.compare-choice { margin: 0; display: flex; align-items: center; gap: 8px; }
+.choice-chip {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.choice-A { background: var(--red); }
+.choice-B { background: var(--blue); }
+
+.split-bar { display: flex; gap: 2px; height: 26px; border-radius: 6px; overflow: hidden; }
+.split-bar span {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  min-width: 0;
+  opacity: 0.55;
+}
+.split-bar .split-A { background: var(--red); }
+.split-bar .split-B { background: var(--blue); justify-content: flex-end; }
+.split-bar .is-yours { opacity: 1; }
+.compare-headline { margin: 0; }
+
+.compare-stats { margin: 0; display: grid; gap: 6px; font-size: 0.92rem; }
+.compare-stats div { display: grid; grid-template-columns: 130px 1fr; gap: 8px; }
+.compare-stats dt { color: var(--text-muted); }
+.compare-stats dd { margin: 0; }
+@media (max-width: 480px) {
+  .compare-stats div { grid-template-columns: 1fr; gap: 0; }
+}

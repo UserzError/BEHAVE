@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import HoverLabels from './HoverLabels.jsx'
 import ScenarioOption from './ScenarioOption.jsx'
 import { sendResponse } from './api.js'
+import { rememberAnswer } from './myAnswers.js'
 import { useTelemetry } from './useTelemetry.js'
 
 const LETTERS = ['A', 'B']
@@ -43,7 +44,8 @@ export default function Poll({ scenarios, demo, sessionId, onDone }) {
       ...getTelemetry(),        // adds first_choice, decision_ms, hover_ms, changed_answer
     }
     setSending(true)
-    await sendResponse(response, demo)
+    const saved = await sendResponse(response, demo)
+    rememberAnswer(sessionId, response, saved) // for "How you compare" on the results page
     setSending(false)
     setSelected(null)
     if (index + 1 < scenarios.length) setIndex(index + 1)
