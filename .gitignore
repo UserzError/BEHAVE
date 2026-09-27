@@ -13,3 +13,9 @@ __pycache__/
 
 # Claude Code project notes (kept local)
 CLAUDE.md
+
+# Feature spec for the scenario designer (kept local)
+ADMIN_BUILDER.md
+
+# Secrets (admin token). Commit .env.example with placeholders instead.
+.env

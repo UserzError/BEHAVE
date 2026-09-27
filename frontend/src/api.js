@@ -13,6 +13,24 @@ export async function loadScenarios() {
   }
 }
 
+async function getJSON(url) {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`GET ${url} returned ${res.status}`)
+  return res.json()
+}
+
+// Results page data: vote counts per scenario (/results) plus option labels (/scenarios).
+export async function loadResults() {
+  try {
+    const [results, scenarios] = await Promise.all([getJSON('/results'), getJSON('/scenarios')])
+    return { results, scenarios, demo: false }
+  } catch (err) {
+    console.warn('Backend not reachable, using sample results:', err)
+    const [results, scenarios] = await Promise.all([getJSON('/sample-results.json'), getJSON('/sample-scenarios.json')])
+    return { results, scenarios, demo: true }
+  }
+}
+
 export async function sendResponse(response, demo) {
   if (demo) {
     console.log('Demo mode — would POST /response:', response)
