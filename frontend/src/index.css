@@ -96,10 +96,6 @@ button:focus-visible {
   gap: clamp(12px, 3vw, 28px);
   margin-bottom: 28px;
 }
-@media (max-width: 560px) {
-  .options { grid-template-columns: 1fr; }
-}
-
 .option {
   display: flex;
   flex-direction: column;
@@ -142,6 +138,24 @@ button:focus-visible {
   font-weight: 700;
 }
 .option-summary { color: var(--text-muted); font-size: 0.95rem; }
+.option-label { flex: 1; min-width: 0; }
+
+/* Phones: keep A and B side by side so they can be compared at a glance,
+   with a compact card, and keep Confirm on screen. */
+@media (max-width: 560px) {
+  .poll h1 { font-size: 1.5rem; }
+  .poll > .muted { margin-bottom: 14px; font-size: 0.9rem; }
+  .options { gap: 8px; margin-bottom: 16px; }
+  .option { gap: 6px; padding: 6px; border-radius: 12px; border-width: 2px; }
+  .option .scene { border-radius: 8px; }
+  /* reserve two lines for the label so both scenes start at the same height */
+  .option-head { gap: 6px; align-items: flex-start; min-height: 2.2rem; }
+  .option-letter-chip { width: 22px; height: 22px; border-radius: 6px; font-size: 0.8rem; }
+  .option-label { font-size: 0.85rem; line-height: 1.25; }
+  .selected-tag { display: none; } /* the thick border shows the selection; screen readers get aria-pressed */
+  .option-summary { font-size: 0.78rem; line-height: 1.3; }
+  .poll > .primary { position: sticky; bottom: 12px; width: 100%; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .option { transition: none; }
