@@ -37,12 +37,6 @@ export function barrierLane(dilemma) {
   return null
 }
 
-// Lanes that have pedestrians (only these can have a road light).
-export function pedestrianLanes(dilemma) {
-  const d = DILEMMAS[dilemma]
-  return [d.stay, d.swerve].filter((place) => place !== 'car')
-}
-
 // ---------- Scenario helpers (v2 format, see ADMIN_BUILDER.md) ----------
 
 export const MAX_GROUP = 5
@@ -69,15 +63,30 @@ export function blankScenario() {
   }
 }
 
+// Lanes that actually have people crossing in this scenario. A lane can be left empty
+// ("nobody there"), and then it can't have a road light either.
+export function lanesWithPeople(scenario) {
+  const d = DILEMMAS[scenario.dilemma]
+  return ['stay', 'swerve']
+    .filter((o) => d[o] !== 'car' && scenario.outcomes[o].group.length > 0)
+    .map((o) => d[o])
+}
+
+// Turn off road lights on lanes that have nobody in them. Changes the scenario in place.
+export function clearUnusedSignals(scenario) {
+  const lanes = lanesWithPeople(scenario)
+  for (const lane of ['ahead', 'other']) {
+    if (!lanes.includes(lane)) scenario.signals[lane] = 'none'
+  }
+  return scenario
+}
+
 // Switch dilemma type: keep both groups (they just change meaning), reset signals that no
 // longer apply to 'none', and update labels that still have the old suggested text.
 export function withDilemma(scenario, dilemma) {
-  const lanes = pedestrianLanes(dilemma)
   const next = structuredClone(scenario)
   next.dilemma = dilemma
-  for (const lane of ['ahead', 'other']) {
-    if (!lanes.includes(lane)) next.signals[lane] = 'none'
-  }
+  clearUnusedSignals(next)
   for (const outcome of ['stay', 'swerve']) {
     if (next.outcomes[outcome].label === DEFAULT_LABELS[scenario.dilemma][outcome]) {
       next.outcomes[outcome].label = DEFAULT_LABELS[dilemma][outcome]
@@ -87,11 +96,13 @@ export function withDilemma(scenario, dilemma) {
 }
 
 // What's missing before a scenario can be saved (empty list = ready).
+// One side may be empty (nobody gets hurt that way), but not both: the road can't be empty.
 export function missingForSave(scenario) {
   const missing = []
   if (!scenario.title.trim()) missing.push('a title')
-  if (scenario.outcomes.stay.group.length === 0) missing.push('at least one character in Stay')
-  if (scenario.outcomes.swerve.group.length === 0) missing.push('at least one character in Swerve')
+  if (scenario.outcomes.stay.group.length === 0 && scenario.outcomes.swerve.group.length === 0) {
+    missing.push('at least one character in Stay or Swerve (both can’t be empty)')
+  }
   if (!scenario.outcomes.stay.label.trim() || !scenario.outcomes.swerve.label.trim()) missing.push('both button labels')
   return missing
 }

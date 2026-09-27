@@ -30,7 +30,12 @@ export default function OutcomePanel({ outcome, scenario, change }) {
           Who dies if the car {outcome === 'stay' ? 'stays' : 'swerves'}? <span className="muted">({data.group.length} / {MAX_GROUP})</span>
         </p>
         <div className="placed" aria-live="polite">
-          {data.group.length === 0 && <span className="muted">Nobody yet. Add 1 to {MAX_GROUP} characters below.</span>}
+          {data.group.length === 0 && (
+            <span className="muted">
+              Nobody. If the car {outcome === 'stay' ? 'stays' : 'swerves'}, no one is hurt.
+              Add up to {MAX_GROUP} below, or leave it empty (the other side needs at least one).
+            </span>
+          )}
           {data.group.map((person, i) => (
             <button
               key={i}

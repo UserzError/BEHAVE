@@ -6,7 +6,7 @@ import HoverLabels from './HoverLabels.jsx'
 import OutcomePanel from './OutcomePanel.jsx'
 import SignalControls from './SignalControls.jsx'
 import { createScenario, updateScenario } from './api.js'
-import { blankScenario, missingForSave, withDilemma } from './scene.js'
+import { blankScenario, clearUnusedSignals, missingForSave, withDilemma } from './scene.js'
 
 // initial: a saved scenario to edit (has an id), or null for a new one.
 // onDone(message): go back to the list; onUnauthorized(): the token stopped working.
@@ -32,7 +32,7 @@ export default function ScenarioEditor({ initial, onDone, onUnauthorized }) {
     setScenario((current) => {
       const copy = structuredClone(current)
       change(copy)
-      return copy
+      return clearUnusedSignals(copy) // e.g. removing the last pedestrian turns that lane's light off
     })
     setError('')
   }
@@ -100,7 +100,7 @@ export default function ScenarioEditor({ initial, onDone, onUnauthorized }) {
       <div className="settings-row">
         <DilemmaPicker value={scenario.dilemma} onChange={(dilemma) => setScenario((s) => withDilemma(s, dilemma))} />
         <SignalControls
-          dilemma={scenario.dilemma}
+          scenario={scenario}
           signals={scenario.signals}
           onChange={(signals) => edit((s) => { s.signals = signals })}
         />

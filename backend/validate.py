@@ -90,21 +90,31 @@ def validate_scenario(data):
         if not isinstance(label, str) or not label.strip() or len(label) > 80:
             return f"outcomes.{name}.label must be text, 1 to 80 characters."
         group = outcome.get("group")
-        if not isinstance(group, list) or not 1 <= len(group) <= MAX_GROUP:
-            return f"outcomes.{name}.group must have 1 to {MAX_GROUP} characters."
+        # A group can be empty (nobody is hurt that way), but see the "empty road" check below.
+        if not isinstance(group, list) or len(group) > MAX_GROUP:
+            return f"outcomes.{name}.group must be a list of 0 to {MAX_GROUP} characters."
         for person in group:
             if not isinstance(person, dict) or person.get("type") not in CHARACTER_TYPES:
                 return f"outcomes.{name}.group has an unknown character type: {person!r}"
             if person.get("fate") not in FATES:
                 return f'outcomes.{name}.group: fate must be "killed".'
 
+    # One side may be empty, but not both: the road can't be empty.
+    if not outcomes["stay"]["group"] and not outcomes["swerve"]["group"]:
+        return "Stay and Swerve can't both be empty: add at least one character."
+
     signals = data.get("signals")
     if not isinstance(signals, dict) or set(signals) != {"ahead", "other"}:
         return 'signals must have exactly "ahead" and "other".'
-    lanes_with_people = set(DILEMMAS[dilemma].values()) - {"car"}
+    # A lane only has a road light if people are actually crossing in it
+    # (not a barrier lane, and not a lane left empty).
+    lanes_with_people = {
+        place for name, place in DILEMMAS[dilemma].items()
+        if place != "car" and outcomes[name]["group"]
+    }
     for lane, value in signals.items():
         if value not in SIGNALS:
             return f"signals.{lane} must be none, green or red."
         if lane not in lanes_with_people and value != "none":
-            return f"signals.{lane} must be none: there are no pedestrians in that lane."
+            return f"signals.{lane} must be none: nobody is crossing in that lane."
     return None

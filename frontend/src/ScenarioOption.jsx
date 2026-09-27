@@ -9,13 +9,14 @@ const labelFor = (type) => CHARACTER_BY_ID[type]?.label ?? type
 export default function ScenarioOption({ letter, outcome, scenario, selected, onSelect, onHoverStart, onHoverEnd, ref }) {
   const data = scenario.outcomes[outcome]
   const dies = describeGroup(data.group, labelFor)
+  const diesText = data.group.length === 0 ? 'Nobody dies' : `Dies: ${dies}`
   return (
     <button
       type="button"
       ref={ref}
       className={`option option-${letter}`}
       aria-pressed={selected}
-      aria-label={`Option ${letter}: ${data.label}. Dies: ${dies}.`}
+      aria-label={`Option ${letter}: ${data.label}. ${diesText}.`}
       onClick={() => onSelect(letter)}
       // Hover only means something with a mouse or pen; touch "hovers" would just be taps.
       onPointerEnter={(e) => e.pointerType !== 'touch' && onHoverStart(letter)}
@@ -27,7 +28,7 @@ export default function ScenarioOption({ letter, outcome, scenario, selected, on
         {selected && <span className="selected-tag">Selected</span>}
       </span>
       <ScenePreview scenario={scenario} outcome={outcome} />
-      <span className="option-summary">Dies: {dies}</span>
+      <span className="option-summary">{diesText}</span>
     </button>
   )
 }

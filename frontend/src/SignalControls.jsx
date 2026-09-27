@@ -1,6 +1,7 @@
 // SignalControls — none / legal / illegal road light for each lane.
-// A lane without pedestrians can't have a light, so its control is disabled.
-import { pedestrianLanes } from './scene.js'
+// A lane with nobody crossing (a barrier lane, or a lane left empty) can't have a light,
+// so its control is disabled.
+import { lanesWithPeople } from './scene.js'
 
 const LANES = [
   { id: 'ahead', label: 'Lane ahead' },
@@ -12,16 +13,16 @@ const OPTIONS = [
   { value: 'red', label: '🔴 Illegal' },
 ]
 
-export default function SignalControls({ dilemma, signals, onChange }) {
-  const lanesWithPeople = pedestrianLanes(dilemma)
+export default function SignalControls({ scenario, signals, onChange }) {
+  const lanesInUse = lanesWithPeople(scenario)
   return (
     <fieldset className="signal-controls">
       <legend>Road lights</legend>
       {LANES.map((lane) => {
-        const allowed = lanesWithPeople.includes(lane.id)
+        const allowed = lanesInUse.includes(lane.id)
         return (
           <fieldset key={lane.id} className="signal-lane" disabled={!allowed}>
-            <legend>{lane.label}{!allowed && <span className="muted"> (no pedestrians)</span>}</legend>
+            <legend>{lane.label}{!allowed && <span className="muted"> (nobody crossing)</span>}</legend>
             {OPTIONS.map((o) => (
               <label key={o.value}>
                 <input
