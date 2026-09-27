@@ -135,6 +135,9 @@ export default function Results() {
   return (
     <section className="results">
       <h1>Results</h1>
+      <p className="disclaimer" role="note">
+        <strong>For demonstration purposes only.</strong> This data will not be used for research.
+      </p>
       {data.demo && <p className="notice">Demo mode: the backend isn't running, so this is sample data.</p>}
 
       {rows.length === 0 ? (

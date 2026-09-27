@@ -6,6 +6,7 @@
 //   anything else -> intro screen -> poll -> thank-you screen
 // (A hash is used because /results is already the backend's API address.)
 import { useEffect, useState } from 'react'
+import Landing from './Landing.jsx'
 import Poll from './Poll.jsx'
 import Results from './Results.jsx'
 import AdminApp from './AdminApp.jsx'
@@ -67,23 +68,13 @@ function PollFlow() {
   }, [])
 
   return (
-    <main className="page">
+    <main className={screen === 'intro' ? 'page page-landing' : 'page'}>
       {data?.demo && (
         <p className="notice">Demo mode: the backend isn't running, so these are sample scenarios and answers aren't saved.</p>
       )}
 
       {screen === 'intro' && (
-        <section className="intro">
-          <h1>Self-Driving Dilemmas</h1>
-          <p>A self-driving car's brakes have failed. In each scenario, you decide what it should do. There are no right answers.</p>
-          <p className="muted">
-            Along with your choice, we record how long you take to decide, how long your pointer rests on each option,
-            and whether you change your mind before confirming. We don't collect your name, email or any other personal information.
-          </p>
-          <button type="button" className="primary" disabled={!data} onClick={() => setScreen('poll')}>
-            {error ? "Couldn't load scenarios" : data ? 'Start' : 'Loading…'}
-          </button>
-        </section>
+        <Landing ready={Boolean(data)} error={error} onStart={() => { setScreen('poll'); window.scrollTo(0, 0) }} />
       )}
 
       {screen === 'poll' && (
