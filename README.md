@@ -1,5 +1,5 @@
 ## **B**ehavioral **E**valuation of **H**uman **A**ttitudes towards **V**ehicle **E**thics
-# A project from hackUMBC '26
+*A project from hackUMBC '26* 
 
 This tool is intended to demonstrate the potential methods for polling for public consensus on autonomous vehicle ethics. 
 
