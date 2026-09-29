@@ -11,8 +11,8 @@ the previous simulated answers instead of adding more.
 
 How the fake choices are made: each character gets a rough "weight", loosely following the broad trends
 reported in Awad et al. (2018), "The Moral Machine Experiment": people tend to spare more lives, children
-over the elderly, humans over pets, and people crossing legally. Close calls take longer and make people
-change their minds more often. These are made-up numbers for a demo, NOT real survey data.
+over the elderly, humans over pets, and people crossing legally. Close calls take longer, make people
+change their minds more often, and make "Indifferent" more likely. These are made-up numbers for a demo, NOT real survey data.
 """
 import json
 import math
@@ -58,21 +58,37 @@ def chance_of_staying(scenario):
 
 def simulate_answer(scenario, person_bias, rng):
     p_stay = min(0.97, max(0.03, chance_of_staying(scenario) + person_bias))
-    choice = "A" if rng.random() < p_stay else "B"
     closeness = 1 - abs(2 * p_stay - 1)  # 1 = a coin flip, 0 = an easy call
+
+    # A few people pick "Indifferent" (I), more often when it's a close call.
+    if rng.random() < 0.03 + 0.12 * closeness:
+        choice = "I"
+    else:
+        choice = "A" if rng.random() < p_stay else "B"
 
     decision_ms = int((2500 + 7000 * closeness) * math.exp(rng.gauss(0, 0.35)))
     changed = rng.random() < 0.06 + 0.3 * closeness
-    other = "B" if choice == "A" else "A"
-    first_choice = other if changed else choice
+    if choice == "I":
+        first_choice = rng.choice("AB") if changed else "I"
+    else:
+        other = "B" if choice == "A" else "A"
+        first_choice = other if changed else choice
 
-    # About 30% are on phones (no hover). Others rest the pointer mostly on the option they end up choosing.
+    # About 30% are on phones (no hover). Others rest the pointer mostly on the option they end up choosing,
+    # and briefly on the Indifferent button.
     if rng.random() < 0.3:
-        hover = {"A": 0, "B": 0}
+        hover = {"A": 0, "B": 0, "I": 0}
     else:
         total = decision_ms * rng.uniform(0.45, 0.85)
-        share = rng.uniform(0.55, 0.75)
-        hover = {choice: int(total * share), other: int(total * (1 - share))}
+        indifferent_time = total * (rng.uniform(0.2, 0.4) if choice == "I" else rng.uniform(0, 0.08))
+        rest = total - indifferent_time
+        if choice == "I":
+            share = rng.uniform(0.4, 0.6)
+            hover = {"A": int(rest * share), "B": int(rest * (1 - share)), "I": int(indifferent_time)}
+        else:
+            share = rng.uniform(0.55, 0.75)
+            other = "B" if choice == "A" else "A"
+            hover = {choice: int(rest * share), other: int(rest * (1 - share)), "I": int(indifferent_time)}
 
     return {"choice": choice, "first_choice": first_choice, "decision_ms": decision_ms,
             "hover_ms": hover, "changed_answer": changed}

@@ -34,8 +34,10 @@ function buildRows(results, scenarios) {
     .sort((a, b) => a.scenario_id.localeCompare(b.scenario_id, undefined, { numeric: true }))
     .map((r, i) => {
       const s = byId[r.scenario_id]
-      const total = r.votes.A + r.votes.B
-      const pctA = total ? Math.round((r.votes.A / total) * 100) : 0
+      const votes = { A: r.votes.A, B: r.votes.B, I: r.votes.I ?? 0 } // I = indifferent (older data has none)
+      const total = votes.A + votes.B + votes.I
+      const pctA = total ? Math.round((votes.A / total) * 100) : 0
+      const pctI = total ? Math.round((votes.I / total) * 100) : 0
       return {
         ...r,
         name: `Scenario ${i + 1}`,
@@ -44,8 +46,11 @@ function buildRows(results, scenarios) {
         labelB: s ? s.outcomes.swerve.label : 'Option B (swerve)',
         killedA: s ? s.outcomes.stay.group.length : '?',
         killedB: s ? s.outcomes.swerve.group.length : '?',
+        votes,
         pctA,
-        pctB: total ? 100 - pctA : 0,
+        pctI,
+        pctB: total ? 100 - pctA - pctI : 0,
+        labelI: 'Indifferent',
         avgSeconds: Math.round(r.avg_decision_ms / 100) / 10, // one decimal place
       }
     })
@@ -67,13 +72,14 @@ export default function Results() {
   if (!data) return <p className="muted">Loading…</p>
 
   const rows = buildRows(data.results, data.scenarios)
-  const totalVotes = rows.reduce((sum, r) => sum + r.votes.A + r.votes.B, 0)
+  const totalVotes = rows.reduce((sum, r) => sum + r.votes.A + r.votes.B + r.votes.I, 0)
   const seeded = rows.reduce((sum, r) => sum + (r.seeded ?? 0), 0) // simulated answers (seed_responses.py)
 
   // Chart colors: A and B match the poll's red and blue squares.
   const colors = {
     A: cssVar('--red'),
     B: cssVar('--blue'),
+    I: '#898781', // neutral gray for "no preference"
     time: dark ? '#9085e9' : '#4a3aa7', // violet, so it isn't mistaken for option B
     surface: cssVar('--surface'),
     text: cssVar('--text-muted'),
@@ -94,8 +100,8 @@ export default function Results() {
 
   const votesData = {
     labels,
-    datasets: ['A', 'B'].map((letter) => ({
-      label: `Option ${letter}`,
+    datasets: ['A', 'B', 'I'].map((letter) => ({
+      label: letter === 'I' ? 'Indifferent' : `Option ${letter}`,
       data: rows.map((r) => r[`pct${letter}`]),
       backgroundColor: colors[letter],
       ...barStyle,
@@ -112,7 +118,7 @@ export default function Results() {
         callbacks: {
           label: (ctx) => {
             const row = rows[ctx.dataIndex]
-            const letter = ctx.datasetIndex === 0 ? 'A' : 'B'
+            const letter = ['A', 'B', 'I'][ctx.datasetIndex]
             return ` ${row[`label${letter}`]}: ${ctx.raw}% (${row.votes[letter]} votes)`
           },
         },
@@ -159,11 +165,11 @@ export default function Results() {
 
           <div className="card">
             <h2>What people chose</h2>
-            <p className="muted">Share of participants who picked each option.</p>
+            <p className="muted">Share of participants who picked each option, or said they were indifferent.</p>
             <div style={{ height: chartHeight }}>
               {/* key forces a fresh chart when light/dark mode changes */}
               <Bar key={`votes-${dark}`} data={votesData} options={votesOptions}
-                aria-label="Share of votes for option A and option B in each scenario" role="img" />
+                aria-label="Share of votes for option A, option B and indifferent in each scenario" role="img" />
             </div>
           </div>
 
@@ -187,6 +193,7 @@ export default function Results() {
                     <th>Option B</th>
                     <th className="num">Votes A</th>
                     <th className="num">Votes B</th>
+                    <th className="num">Indifferent</th>
                     <th className="num">Avg. decision</th>
                     <th className="num">Changed mind</th>
                   </tr>
@@ -199,6 +206,7 @@ export default function Results() {
                       <td>{r.labelB} ({r.killedB} killed)</td>
                       <td className="num">{r.votes.A} ({r.pctA}%)</td>
                       <td className="num">{r.votes.B} ({r.pctB}%)</td>
+                      <td className="num">{r.votes.I} ({r.pctI}%)</td>
                       <td className="num">{r.avgSeconds} s</td>
                       <td className="num">{Math.round(r.changed_rate * 100)}%</td>
                     </tr>

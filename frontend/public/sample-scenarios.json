@@ -404,5 +404,62 @@
         ]
       }
     }
+  },
+  {
+    "id": "s11",
+    "title": "vigilante plus",
+    "description": "",
+    "text": "The car's brakes have failed. What should it do?",
+    "dilemma": "peds_vs_peds",
+    "signals": {
+      "ahead": "none",
+      "other": "none"
+    },
+    "outcomes": {
+      "stay": {
+        "label": "Stay in lane",
+        "group": []
+      },
+      "swerve": {
+        "label": "Swerve into the other lane",
+        "group": [
+          {
+            "type": "criminal",
+            "fate": "killed"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "s12",
+    "title": "child vs swerve man",
+    "description": "",
+    "text": "The car's brakes have failed. What should it do?",
+    "dilemma": "peds_ahead_vs_car",
+    "signals": {
+      "ahead": "none",
+      "other": "none"
+    },
+    "outcomes": {
+      "stay": {
+        "label": "Stay in lane",
+        "group": [
+          {
+            "type": "boy",
+            "fate": "killed"
+          }
+        ]
+      },
+      "swerve": {
+        "label": "Swerve into the barrier",
+        "group": [
+          {
+            "type": "man",
+            "fate": "killed"
+          }
+        ]
+      }
+    }
   }
 ]

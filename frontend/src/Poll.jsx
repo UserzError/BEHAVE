@@ -11,10 +11,10 @@ const OUTCOME_FOR = { A: 'stay', B: 'swerve' } // A = stay, B = swerve
 
 export default function Poll({ scenarios, demo, sessionId, onDone }) {
   const [index, setIndex] = useState(0)         // which scenario is on screen
-  const [selected, setSelected] = useState(null) // "A", "B", or null
+  const [selected, setSelected] = useState(null) // "A", "B", "I" (indifferent), or null
   const [sending, setSending] = useState(false)
   const { startTracking, hoverStart, hoverEnd, recordSelection, getTelemetry } = useTelemetry()
-  const optionRefs = useRef({ A: null, B: null })
+  const optionRefs = useRef({ A: null, B: null, I: null })
   const headingRef = useRef(null)
 
   const scenario = scenarios[index]
@@ -23,7 +23,7 @@ export default function Poll({ scenarios, demo, sessionId, onDone }) {
   useEffect(() => {
     startTracking()
     // If the pointer is already resting on an option, no pointerenter fires, so start that hover now.
-    for (const letter of LETTERS) {
+    for (const letter of [...LETTERS, 'I']) {
       if (optionRefs.current[letter]?.matches(':hover')) hoverStart(letter)
     }
     if (index > 0) headingRef.current?.focus()
@@ -40,7 +40,7 @@ export default function Poll({ scenarios, demo, sessionId, onDone }) {
     const response = {
       session_id: sessionId,    // random id for this participant
       scenario_id: scenario.id,
-      choice: selected,         // final confirmed choice, "A" or "B"
+      choice: selected,         // final confirmed choice: "A", "B" or "I" (indifferent)
       ...getTelemetry(),        // adds first_choice, decision_ms, hover_ms, changed_answer
     }
     setSending(true)
@@ -73,6 +73,20 @@ export default function Poll({ scenarios, demo, sessionId, onDone }) {
           />
         ))}
       </HoverLabels>
+
+      {/* Indifferent: no preference between the two outcomes. Tracked like A and B (selection, hover, switching). */}
+      <button
+        type="button"
+        ref={(node) => { optionRefs.current.I = node }}
+        className="indifferent"
+        aria-pressed={selected === 'I'}
+        onClick={() => select('I')}
+        onPointerEnter={(e) => e.pointerType !== 'touch' && hoverStart('I')}
+        onPointerLeave={(e) => e.pointerType !== 'touch' && hoverEnd('I')}
+      >
+        <strong>Indifferent</strong>
+        <span className="muted"> · I don't prefer either outcome</span>
+      </button>
 
       <button type="button" className="primary" disabled={!selected || sending} onClick={confirm}>
         Confirm choice

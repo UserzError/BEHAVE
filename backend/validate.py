@@ -42,16 +42,18 @@ def validate_response(data, scenario_exists):
 
     if not isinstance(data["session_id"], str) or not 1 <= len(data["session_id"]) <= 64:
         return "session_id must be text, 1 to 64 characters."
-    if data["choice"] not in ("A", "B"):
-        return 'choice must be "A" or "B".'
-    if data.get("first_choice") not in ("A", "B", None):
-        return 'first_choice must be "A", "B" or null.'
+    # "I" = Indifferent: the participant doesn't prefer either outcome.
+    if data["choice"] not in ("A", "B", "I"):
+        return 'choice must be "A", "B" or "I" (indifferent).'
+    if data.get("first_choice") not in ("A", "B", "I", None):
+        return 'first_choice must be "A", "B", "I" or null.'
     if not is_whole_number(data["decision_ms"]) or data["decision_ms"] < 0:
         return "decision_ms must be a whole number of milliseconds (0 or more)."
 
     hover = data["hover_ms"]
-    if not isinstance(hover, dict) or set(hover) != {"A", "B"}:
-        return 'hover_ms must look like {"A": 1200, "B": 800}.'
+    # "I" (time on the Indifferent button) is optional, so older versions of the poll still work.
+    if not isinstance(hover, dict) or set(hover) not in ({"A", "B"}, {"A", "B", "I"}):
+        return 'hover_ms must look like {"A": 1200, "B": 800, "I": 150}.'
     if not all(is_whole_number(v) and v >= 0 for v in hover.values()):
         return "hover_ms values must be whole numbers of milliseconds (0 or more)."
 

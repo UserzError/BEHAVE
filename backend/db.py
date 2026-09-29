@@ -160,7 +160,7 @@ SEED_PREFIX = "seed-"  # session ids of simulated answers made by seed_responses
 
 
 def get_results():
-    """Per scenario that has answers: votes for A and B, average decision time, share who changed their mind,
+    """Per scenario that has answers: votes for A, B and I (indifferent), average decision time, share who changed their mind,
     average hover time on each option, the number of answers, and how many of those are simulated (seeded)."""
     with open_db() as conn:
         rows = conn.execute("""
@@ -168,10 +168,12 @@ def get_results():
                    COUNT(*)                                AS answers,
                    SUM(choice = 'A')                       AS votes_a,
                    SUM(choice = 'B')                       AS votes_b,
+                   SUM(choice = 'I')                       AS votes_i,
                    AVG(decision_ms)                        AS avg_decision_ms,
                    AVG(changed_answer)                     AS changed_rate,
                    AVG(json_extract(hover_ms, '$.A'))      AS avg_hover_a,
                    AVG(json_extract(hover_ms, '$.B'))      AS avg_hover_b,
+                   AVG(COALESCE(json_extract(hover_ms, '$.I'), 0)) AS avg_hover_i,
                    SUM(session_id LIKE ? || '%')           AS seeded
             FROM responses
             GROUP BY scenario_id
@@ -181,10 +183,14 @@ def get_results():
         {
             "scenario_id": row["scenario_id"],
             "answers": row["answers"],
-            "votes": {"A": row["votes_a"], "B": row["votes_b"]},
+            "votes": {"A": row["votes_a"], "B": row["votes_b"], "I": row["votes_i"]},  # I = indifferent
             "avg_decision_ms": round(row["avg_decision_ms"] or 0),
             "changed_rate": round(row["changed_rate"] or 0, 3),
-            "avg_hover_ms": {"A": round(row["avg_hover_a"] or 0), "B": round(row["avg_hover_b"] or 0)},
+            "avg_hover_ms": {
+                "A": round(row["avg_hover_a"] or 0),
+                "B": round(row["avg_hover_b"] or 0),
+                "I": round(row["avg_hover_i"] or 0),
+            },
             "seeded": row["seeded"],
         }
         for row in rows
