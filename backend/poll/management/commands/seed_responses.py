@@ -1,9 +1,8 @@
-"""seed_responses.py - fills the database with SIMULATED answers, so the results page has something to show.
+"""manage.py seed_responses - fills the database with SIMULATED answers, so the results page has something to show.
 
-Run it from the backend folder:
-    venv/bin/python seed_responses.py              # 40 simulated people answer every scenario
-    venv/bin/python seed_responses.py 100          # 100 simulated people
-    venv/bin/python seed_responses.py --remove     # delete all simulated answers
+    venv/bin/python manage.py seed_responses              # 40 simulated people answer every scenario
+    venv/bin/python manage.py seed_responses 100          # 100 simulated people
+    venv/bin/python manage.py seed_responses --remove     # delete all simulated answers
 
 Every simulated answer has a session id starting with "seed-", so it can be told apart from real answers
 (the results page shows how many answers are simulated) and removed at any time. Running it again replaces
@@ -14,12 +13,14 @@ reported in Awad et al. (2018), "The Moral Machine Experiment": people tend to s
 over the elderly, humans over pets, and people crossing legally. Close calls take longer and make people
 change their minds more often. These are made-up numbers for a demo, NOT real survey data.
 """
-import json
 import math
 import random
-import sys
 
-import db
+from django.core.management.base import BaseCommand
+from django.db import transaction
+
+from poll.models import Response, Scenario
+from poll.queries import SEED_PREFIX
 
 # How much sparing each character "counts" in the simulation (1 = an adult).
 WEIGHTS = {
@@ -78,38 +79,34 @@ def simulate_answer(scenario, person_bias, rng):
             "hover_ms": hover, "changed_answer": changed}
 
 
-def remove_seeded(conn):
-    return conn.execute("DELETE FROM responses WHERE session_id LIKE ?", (db.SEED_PREFIX + "%",)).rowcount
+class Command(BaseCommand):
+    help = "Add simulated answers for every scenario (replacing earlier simulated ones)."
 
+    def add_arguments(self, parser):
+        parser.add_argument("people", nargs="?", type=int, default=40, help="how many simulated people (default 40)")
+        parser.add_argument("--remove", action="store_true", help="only delete the simulated answers")
 
-def main():
-    db.init_db()
-    if "--remove" in sys.argv:
-        with db.open_db() as conn:
-            print(f"Removed {remove_seeded(conn)} simulated answers.")
-        return
+    def handle(self, *args, people=40, remove=False, **options):
+        seeded = Response.objects.filter(session_id__startswith=SEED_PREFIX)
+        if remove:
+            removed, _ = seeded.delete()
+            self.stdout.write(f"Removed {removed} simulated answers.")
+            return
 
-    people = int(sys.argv[1]) if len(sys.argv) > 1 else 40
-    scenarios = db.list_scenarios()
-    rng = random.Random(2026)  # fixed seed, so the same scenarios always give the same fake data
-
-    with db.open_db() as conn:
-        removed = remove_seeded(conn)
+        scenarios = [s.data for s in Scenario.objects.all()]
+        rng = random.Random(2026)  # fixed seed, so the same scenarios always give the same fake data
+        answers = []
         for n in range(people):
-            session_id = f"{db.SEED_PREFIX}{n:04d}"
+            session_id = f"{SEED_PREFIX}{n:04d}"
             person_bias = rng.gauss(0, 0.12)  # some simulated people lean towards staying, some towards swerving
             for scenario in scenarios:
                 a = simulate_answer(scenario, person_bias, rng)
-                conn.execute(
-                    """INSERT INTO responses
-                       (session_id, scenario_id, choice, first_choice, decision_ms, hover_ms, changed_answer)
-                       VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                    (session_id, scenario["id"], a["choice"], a["first_choice"], a["decision_ms"],
-                     json.dumps(a["hover_ms"]), 1 if a["changed_answer"] else 0),
-                )
-    print(f"Added {people * len(scenarios)} simulated answers ({people} people x {len(scenarios)} scenarios)"
-          + (f", replacing {removed} old ones." if removed else "."))
+                answers.append(Response(session_id=session_id, scenario_id=scenario["id"], **a))
 
-
-if __name__ == "__main__":
-    main()
+        with transaction.atomic():  # replace the old simulated answers in one go
+            removed, _ = seeded.delete()
+            Response.objects.bulk_create(answers)
+        self.stdout.write(self.style.SUCCESS(
+            f"Added {len(answers)} simulated answers ({people} people x {len(scenarios)} scenarios)"
+            + (f", replacing {removed} old ones." if removed else ".")
+        ))

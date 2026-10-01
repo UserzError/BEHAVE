@@ -5,7 +5,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   server: {
-    // During `npm run dev`, forward API calls to the Flask backend (python app.py on port 5000).
+    // During `npm run dev`, forward API calls to the Django backend (manage.py runserver 5000).
     proxy: {
       '/scenarios': 'http://localhost:5000',
       '/response': 'http://localhost:5000',
