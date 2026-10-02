@@ -1,7 +1,7 @@
 // ScenarioList — every saved scenario, with Edit and Delete, plus a button for a new one.
 import { useEffect, useState } from 'react'
 import { Character } from './characters.jsx'
-import { deleteScenario, loadScenarios } from './api.js'
+import { deleteScenario, downloadAnswersCsv, loadScenarios } from './api.js'
 import { DILEMMAS } from './scene.js'
 
 export default function ScenarioList({ onEdit, onNew, message, onUnauthorized }) {
@@ -28,6 +28,16 @@ export default function ScenarioList({ onEdit, onNew, message, onUnauthorized })
     }
   }
 
+  async function download(includeSimulated) {
+    try {
+      await downloadAnswersCsv(includeSimulated)
+      setStatus(includeSimulated ? 'Downloaded all answers, including simulated ones.' : 'Downloaded all real answers (simulated ones left out).')
+    } catch (err) {
+      if (err.status === 401) onUnauthorized()
+      setStatus(err.message)
+    }
+  }
+
   if (!scenarios) return <p className="muted">Loading…</p>
 
   return (
@@ -37,7 +47,11 @@ export default function ScenarioList({ onEdit, onNew, message, onUnauthorized })
           <h1>Scenario designer</h1>
           <p className="muted">{scenarios.length} scenario{scenarios.length === 1 ? '' : 's'}. Participants see them in a random order.</p>
         </div>
-        <button type="button" className="primary" onClick={onNew} disabled={demo}>+ New scenario</button>
+        <div className="list-header-actions">
+          <button type="button" className="secondary" onClick={() => download(false)} disabled={demo}>Download answers (CSV)</button>
+          <button type="button" className="link-button" onClick={() => download(true)} disabled={demo}>with simulated</button>
+          <button type="button" className="primary" onClick={onNew} disabled={demo}>+ New scenario</button>
+        </div>
       </div>
       {demo && <p className="notice">The backend isn't running, so these are the sample scenarios and nothing can be saved. Start it with <code>python app.py</code> in <code>backend/</code>.</p>}
       {status && <p className="notice" role="status">{status}</p>}

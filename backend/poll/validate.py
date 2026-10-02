@@ -23,6 +23,7 @@ DILEMMAS = {
 SIGNALS = {"none", "green", "red"}
 FATES = {"killed"}  # people are either killed or fine; only the killed ones are listed
 MAX_GROUP = 5
+MAX_PATH_POINTS = 600  # mouse-path points per answer
 
 
 def is_whole_number(value):
@@ -57,6 +58,25 @@ def validate_response(data, scenario_exists):
 
     if not isinstance(data["changed_answer"], bool):
         return "changed_answer must be true or false."
+
+    # Optional fields (older versions of the poll don't send them).
+    if data.get("stay_on_left") not in (True, False, None):
+        return "stay_on_left must be true, false or null."
+    position = data.get("position")
+    if position is not None and not (is_whole_number(position) and 1 <= position <= 1000):
+        return "position must be a whole number from 1 to 1000."
+    final_select = data.get("final_select_ms")
+    if final_select is not None and not (is_whole_number(final_select) and final_select >= 0):
+        return "final_select_ms must be a whole number of milliseconds (0 or more)."
+    path = data.get("mouse_path")
+    if path is not None:
+        if not isinstance(path, list) or len(path) > MAX_PATH_POINTS:
+            return f"mouse_path must be a list of at most {MAX_PATH_POINTS} points."
+        for point in path:
+            if not (isinstance(point, list) and len(point) == 3
+                    and all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in point)
+                    and point[0] >= 0 and all(-5 <= v <= 5 for v in point[1:])):
+                return "mouse_path points must look like [t_ms, x, y] (x and y between -5 and 5)."
     if not scenario_exists(data["scenario_id"]):
         return f"There is no scenario with id {data['scenario_id']!r}."
     return None

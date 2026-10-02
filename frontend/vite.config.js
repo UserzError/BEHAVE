@@ -13,4 +13,8 @@ export default defineConfig({
       '/admin': 'http://localhost:5000', // scenario designer API (the page itself is at /#/admin)
     },
   },
+  // Frontend tests (npm test): run in a simulated browser (jsdom).
+  test: {
+    environment: 'jsdom',
+  },
 })

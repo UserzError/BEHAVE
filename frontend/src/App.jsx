@@ -5,14 +5,17 @@
 //   #/scenes  -> scene preview examples
 //   anything else -> intro screen -> poll -> thank-you screen
 // (A hash is used because /results is already the backend's API address.)
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import Landing from './Landing.jsx'
 import Poll from './Poll.jsx'
-import Results from './Results.jsx'
-import AdminApp from './AdminApp.jsx'
-import Gallery from './Gallery.jsx'
-import ScenesDemo from './ScenesDemo.jsx'
 import { loadScenarios } from './api.js'
+
+// Pages other than the poll are only downloaded when someone opens them, so the poll loads fast.
+// (The results page brings in Chart.js, the biggest library; the designer and art pages are for admins.)
+const Results = lazy(() => import('./Results.jsx'))
+const AdminApp = lazy(() => import('./AdminApp.jsx'))
+const Gallery = lazy(() => import('./Gallery.jsx'))
+const ScenesDemo = lazy(() => import('./ScenesDemo.jsx'))
 
 // Random id for this participant, made once per page load. No personal info is collected.
 const sessionId = crypto.randomUUID()
@@ -37,20 +40,21 @@ function useHash() {
   return hash
 }
 
+// Shown for a moment while a page's code downloads.
+function Page({ className, children }) {
+  return (
+    <main className={className}>
+      <Suspense fallback={<p className="muted">Loading…</p>}>{children}</Suspense>
+    </main>
+  )
+}
+
 export default function App() {
   const hash = useHash()
-  if (hash === '#/results') {
-    return <main className="page page-wide"><Results /></main>
-  }
-  if (hash === '#/scenes') {
-    return <main className="page page-wide"><ScenesDemo /></main>
-  }
-  if (hash === '#/gallery') {
-    return <main className="page page-wide"><Gallery /></main>
-  }
-  if (hash === '#/admin') {
-    return <main className="page page-admin"><AdminApp /></main>
-  }
+  if (hash === '#/results') return <Page className="page page-wide"><Results /></Page>
+  if (hash === '#/scenes') return <Page className="page page-wide"><ScenesDemo /></Page>
+  if (hash === '#/gallery') return <Page className="page page-wide"><Gallery /></Page>
+  if (hash === '#/admin') return <Page className="page page-admin"><AdminApp /></Page>
   return <PollFlow />
 }
 

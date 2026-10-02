@@ -63,6 +63,7 @@ Do this whenever you change the site or the scenarios, then update the server (s
    POSTGRES_PASSWORD=YOUR_PG_PASSWORD
    POSTGRES_HOST=YOUR_PG_ADDRESS
    POSTGRES_PORT=YOUR_PG_PORT
+   TRUST_X_FORWARDED_FOR=true
    EOF
    grep ADMIN_TOKEN .env   # copy this value somewhere safe: it unlocks the scenario designer
    ```

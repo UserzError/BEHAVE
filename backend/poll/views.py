@@ -5,13 +5,16 @@ returns JSON. Errors come back as {"error": "..."} with a 4xx status, same as th
 """
 import hmac
 import json
+import time
 
 from django.conf import settings
+from django.core.cache import cache
 from django.http import FileResponse, HttpResponse, JsonResponse
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django.views.static import serve
 
 from . import queries
+from .trajectory import summarize
 from .models import Response, Scenario
 from .validate import validate_response, validate_scenario
 
@@ -51,12 +54,37 @@ def scenarios(request):
     return JsonResponse([s.data for s in Scenario.objects.all()], safe=False)  # safe=False allows a list
 
 
+def client_ip(request):
+    """The visitor's IP address (see TRUST_X_FORWARDED_FOR in settings.py)."""
+    if settings.TRUST_X_FORWARDED_FOR:
+        forwarded = request.headers.get("X-Forwarded-For", "")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR", "unknown")
+
+
+def over_rate_limit(request):
+    """Count this answer against the visitor's IP; True if they've sent too many in this time window."""
+    window = settings.RESPONSE_RATE_WINDOW_SECONDS
+    key = f"answers:{client_ip(request)}:{int(time.time() // window)}"
+    cache.add(key, 0, timeout=window)  # start the counter at 0 if it doesn't exist yet
+    try:
+        count = cache.incr(key)
+    except ValueError:  # the counter expired between the two lines
+        cache.set(key, 1, timeout=window)
+        count = 1
+    return count > settings.RESPONSE_RATE_LIMIT
+
+
 @require_POST
 def response(request):
+    if over_rate_limit(request):
+        return error("Too many answers from your network. Please wait a few minutes and try again.", 429)
     data = read_json(request)
     problem = validate_response(data, lambda scenario_id: Scenario.objects.filter(pk=scenario_id).exists())
     if problem:
         return error(problem)
+    path = data.get("mouse_path") or None
     Response.objects.create(
         session_id=data["session_id"],
         scenario_id=data["scenario_id"],
@@ -65,6 +93,11 @@ def response(request):
         decision_ms=data["decision_ms"],
         hover_ms=data["hover_ms"],
         changed_answer=data["changed_answer"],
+        stay_on_left=data.get("stay_on_left"),
+        position=data.get("position"),
+        mouse_path=path,
+        final_select_ms=data.get("final_select_ms"),
+        **summarize(path, data.get("final_select_ms")),  # path_length, max_deviation, x_flips
     )
     return JsonResponse({"ok": True})
 
@@ -104,6 +137,19 @@ def clean_scenario(data, scenario_id):
             for name, outcome in data["outcomes"].items()
         },
     }
+
+
+@require_GET
+def admin_export_csv(request):
+    """All answers as a CSV download. Simulated answers are left out unless ?simulated=1."""
+    failed = admin_check_failed(request)
+    if failed:
+        return failed
+    include_simulated = request.GET.get("simulated") == "1"
+    reply = HttpResponse(content_type="text/csv; charset=utf-8")
+    reply["Content-Disposition"] = 'attachment; filename="behave-answers.csv"'
+    queries.write_answers_csv(reply, include_simulated)
+    return reply
 
 
 @require_GET

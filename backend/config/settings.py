@@ -53,6 +53,14 @@ ALLOWED_HOSTS = [h.strip() for h in env("DJANGO_ALLOWED_HOSTS", "localhost,127.0
 # Password for the scenario designer's API (sent in the X-Admin-Token header).
 ADMIN_TOKEN = env("ADMIN_TOKEN")
 
+# Spam protection for POST /response: at most this many answers per IP address per window.
+# A full poll is ~12 answers, and many people can share one IP (school/event wifi), so it's generous.
+RESPONSE_RATE_LIMIT = int(env("RESPONSE_RATE_LIMIT", "300"))
+RESPONSE_RATE_WINDOW_SECONDS = int(env("RESPONSE_RATE_WINDOW_SECONDS", "600"))
+# Behind a hosting proxy every request seems to come from the proxy; set this to true there so the
+# visitor's real address is read from the X-Forwarded-For header instead.
+TRUST_X_FORWARDED_FOR = env("TRUST_X_FORWARDED_FOR", "false").lower() == "true"
+
 # ---------- What Django loads ----------
 
 # Just our app. We don't use Django's login system or its admin site

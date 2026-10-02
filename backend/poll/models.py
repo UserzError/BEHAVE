@@ -29,6 +29,18 @@ class Response(models.Model):
     decision_ms = models.IntegerField()                                      # time to confirm, in milliseconds
     hover_ms = models.JSONField()                                            # {"A": 3100, "B": 1250}
     changed_answer = models.BooleanField()                                   # did they switch before confirming?
+
+    # Study design (optional; older answers don't have them)
+    stay_on_left = models.BooleanField(null=True)           # was "stay" (A) shown on the left? sides are randomized
+    position = models.PositiveIntegerField(null=True)       # 1 = the first scenario this person saw
+
+    # Mouse tracking (optional; empty on touch screens). See trajectory.py.
+    mouse_path = models.JSONField(null=True)                # [[t_ms, x, y], ...], x/y relative to the options area
+    final_select_ms = models.IntegerField(null=True)        # when they clicked their final choice
+    path_length = models.FloatField(null=True)
+    max_deviation = models.FloatField(null=True)
+    x_flips = models.IntegerField(null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

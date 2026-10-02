@@ -17,6 +17,7 @@ urlpatterns = [
 
     # Scenario designer (needs the X-Admin-Token header)
     path("admin/check", views.admin_check),                          # GET    is the token right?
+    path("admin/export.csv", views.admin_export_csv),                # GET    all answers as a CSV file
     path("admin/scenarios", views.admin_create_scenario),            # POST   create
     path("admin/scenarios/<str:scenario_id>", views.admin_scenario),  # PUT    replace, DELETE delete
 

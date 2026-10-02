@@ -99,3 +99,26 @@ export const checkAdminToken = (token) => adminFetch('GET', '/admin/check', unde
 export const createScenario = (scenario) => adminFetch('POST', '/admin/scenarios', scenario)
 export const updateScenario = (id, scenario) => adminFetch('PUT', `/admin/scenarios/${encodeURIComponent(id)}`, scenario)
 export const deleteScenario = (id) => adminFetch('DELETE', `/admin/scenarios/${encodeURIComponent(id)}`)
+
+// Download every answer as a CSV file (simulated answers only if includeSimulated).
+export async function downloadAnswersCsv(includeSimulated = false) {
+  let res
+  try {
+    res = await fetch(`/admin/export.csv${includeSimulated ? '?simulated=1' : ''}`, {
+      headers: { 'X-Admin-Token': getAdminToken() },
+    })
+  } catch {
+    throw new Error("Can't reach the backend. Is the server running?")
+  }
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    const err = new Error(data.error || `Download failed (${res.status})`)
+    err.status = res.status
+    throw err
+  }
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(await res.blob())
+  link.download = includeSimulated ? 'behave-answers-with-simulated.csv' : 'behave-answers.csv'
+  link.click()
+  URL.revokeObjectURL(link.href)
+}

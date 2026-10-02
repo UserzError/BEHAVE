@@ -22,3 +22,6 @@ ADMIN_BUILDER.md
 
 # Secrets (admin token). Commit .env.example with placeholders instead.
 .env
+
+# Answer exports from manage.py export_responses (may contain real answers)
+backend/*.csv

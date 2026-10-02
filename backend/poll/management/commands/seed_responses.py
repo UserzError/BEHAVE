@@ -99,9 +99,14 @@ class Command(BaseCommand):
         for n in range(people):
             session_id = f"{SEED_PREFIX}{n:04d}"
             person_bias = rng.gauss(0, 0.12)  # some simulated people lean towards staying, some towards swerving
-            for scenario in scenarios:
+            order = rng.sample(scenarios, len(scenarios))  # each person sees them in a random order, like the poll
+            for position, scenario in enumerate(order, start=1):
                 a = simulate_answer(scenario, person_bias, rng)
-                answers.append(Response(session_id=session_id, scenario_id=scenario["id"], **a))
+                answers.append(Response(
+                    session_id=session_id, scenario_id=scenario["id"], position=position,
+                    stay_on_left=rng.random() < 0.5,  # random sides, like the poll (no side bias is simulated)
+                    **a,  # no mouse path: we don't invent the thing we're trying to measure
+                ))
 
         with transaction.atomic():  # replace the old simulated answers in one go
             removed, _ = seeded.delete()

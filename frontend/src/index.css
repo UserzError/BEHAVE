@@ -373,6 +373,7 @@ td.nowrap, .nowrap { white-space: nowrap; }
 /* list view */
 .list-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 12px; }
 .list-header .primary { margin: 0; }
+.list-header-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .list-rows { list-style: none; margin: 0; padding: 0; }
 .list-row {
   display: grid;
