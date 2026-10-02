@@ -6,7 +6,10 @@ export const percent = (x) => `${Math.round(x * 100)}%`
 // Everyone else's numbers for one scenario (the totals minus your own answer, if it was counted).
 export function othersFor(row, mine) {
   const total = row.answers ?? row.votes.A + row.votes.B + (row.votes.I ?? 0)
-  const counted = mine.saved ? 1 : 0
+  // Your answer is in these totals if it was saved before this results snapshot was computed.
+  // (Results are cached for a few seconds, so a just-saved answer may not be counted yet.)
+  const inSnapshot = !row.computed_at || !mine.saved_at || Date.parse(mine.saved_at) <= Date.parse(row.computed_at)
+  const counted = mine.saved && inSnapshot ? 1 : 0
   const n = Math.max(0, total - counted)
   // average without one value: (average × count − value) ÷ (count − 1)
   const without = (avg, value) => (n > 0 ? (avg * total - counted * value) / n : 0)

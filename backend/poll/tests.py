@@ -4,10 +4,11 @@ Django runs these against a temporary, empty test database (it doesn't touch you
 """
 import json
 
+from django.core.cache import cache
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 
-from .models import Response, Scenario
+from .models import RateLimit, Response, Scenario
 
 TOKEN = "test-token"
 
@@ -30,6 +31,7 @@ ANSWER = {
 @override_settings(ADMIN_TOKEN=TOKEN)
 class ApiTests(TestCase):
     def setUp(self):
+        cache.clear()
         Scenario.objects.create(id="s1", data={**SCENARIO, "id": "s1"})
 
     # helpers
@@ -47,7 +49,9 @@ class ApiTests(TestCase):
         self.assertEqual([s["id"] for s in data], ["s1"])
 
     def test_response_is_saved(self):
-        self.assertEqual(self.post("/response", ANSWER).json(), {"ok": True})
+        reply = self.post("/response", ANSWER).json()
+        self.assertTrue(reply["ok"])
+        self.assertIn("saved_at", reply)
         saved = Response.objects.get()
         self.assertEqual((saved.choice, saved.first_choice, saved.hover_ms, saved.changed_answer),
                          ("B", "A", {"A": 3100, "B": 1250}, True))
@@ -147,8 +151,6 @@ class ApiTests(TestCase):
 
 
 # ---------- study design, mouse tracking, rate limit, CSV ----------
-
-from django.core.cache import cache  # noqa: E402
 
 from .trajectory import summarize  # noqa: E402
 
@@ -275,3 +277,39 @@ class IndifferentTests(TestCase):
     def test_simulated_answers_include_some_indifferent(self):
         call_command("seed_responses", 60, stdout=open("/dev/null", "w"))
         self.assertTrue(Response.objects.filter(choice="I").exists())
+
+
+# ---------- scaling fixes: shared rate limit, cached results ----------
+
+class ScalingTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        Scenario.objects.create(id="s1", data={**SCENARIO, "id": "s1"})
+
+    def post(self, body=ANSWER, ip="10.0.0.1"):
+        return self.client.post("/response", json.dumps(body), content_type="application/json", REMOTE_ADDR=ip)
+
+    @override_settings(RESPONSE_RATE_LIMIT=2)
+    def test_rate_limit_is_counted_in_the_database_per_ip(self):
+        self.assertEqual([self.post().status_code for _ in range(3)], [200, 200, 429])
+        self.assertEqual(self.post(ip="10.0.0.2").status_code, 200)  # another visitor has their own count
+        self.assertEqual(RateLimit.objects.get(key__contains="10.0.0.1").count, 3)
+
+    @override_settings(RESULTS_CACHE_SECONDS=60)
+    def test_results_are_cached_with_a_timestamp(self):
+        saved_at = self.post().json()["saved_at"]
+        first = self.client.get("/results").json()
+        self.assertEqual(first[0]["answers"], 1)
+        self.assertGreaterEqual(first[0]["computed_at"], saved_at)  # the snapshot includes that answer
+
+        later = self.post().json()["saved_at"]
+        cached = self.client.get("/results").json()
+        self.assertEqual(cached[0]["answers"], 1)  # still the cached snapshot...
+        self.assertLess(cached[0]["computed_at"], later)  # ...and its timestamp says the new answer isn't in it
+
+    @override_settings(RESULTS_CACHE_SECONDS=0)
+    def test_cache_can_be_turned_off(self):
+        self.post()
+        self.client.get("/results")
+        self.post()
+        self.assertEqual(self.client.get("/results").json()[0]["answers"], 2)

@@ -136,7 +136,9 @@ All of these run in `backend/` (on Windows use `venv\Scripts\python` instead of 
 - **Starting fresh:** `/opt/homebrew/opt/postgresql@17/bin/dropdb behave`, then `createdb behave` and the `migrate` / `load_scenarios` steps again.
 - **Frontend tests:** `npm test` in `frontend/`.
 - **What's recorded per answer:** the choice (stay, swerve, or **Indifferent**), decision time, hover time on each option (including the Indifferent button), whether they changed their mind, which side "stay" was shown on (sides are randomized per scenario), the scenario's position in the poll, and the mouse path with three summary measures (path length, maximum deviation from a straight line, and left/right direction changes). See `backend/poll/models.py`.
-- **Spam protection:** `POST /response` accepts at most 300 answers per IP address per 10 minutes (`RESPONSE_RATE_LIMIT` in `.env`).
+- **Spam protection:** `POST /response` accepts at most 300 answers per IP address per 10 minutes (`RESPONSE_RATE_LIMIT` in `.env`). The count is kept in the database, so it holds across several worker processes or servers.
+- **Results cache:** `/results` is cached for 15 seconds (`RESULTS_CACHE_SECONDS`), so new answers appear on the results page within that time.
+- **Production server:** `runserver` is for development only. On a Linux or macOS server, run `venv/bin/gunicorn config.wsgi` instead (settings in `backend/gunicorn.conf.py`; port from `PORT`). In a local load test, gunicorn handled about 2,500 requests per second with no errors at 400 simultaneous participants, while `runserver` started failing at 200 (Postgres ran out of connections).
 - **Database settings** (user, password, host) go in `backend/.env`; see `backend/.env.example`.
 - **Without the backend running**, the website still opens in demo mode with sample scenarios, but answers aren't saved.
 - **"Port 5000 is in use" on macOS:** turn off AirPlay Receiver in System Settings → General → AirDrop & Handoff.

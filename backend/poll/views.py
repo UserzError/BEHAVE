@@ -5,10 +5,14 @@ returns JSON. Errors come back as {"error": "..."} with a 4xx status, same as th
 """
 import hmac
 import json
+import random
 import time
+from datetime import datetime, timezone as dt_timezone
 
 from django.conf import settings
-from django.core.cache import cache
+
+from django.db import connection
+from django.utils import timezone
 from django.http import FileResponse, HttpResponse, JsonResponse
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django.views.static import serve
@@ -64,15 +68,26 @@ def client_ip(request):
 
 
 def over_rate_limit(request):
-    """Count this answer against the visitor's IP; True if they've sent too many in this time window."""
+    """Count this answer against the visitor's IP; True if they've sent too many in this time window.
+
+    The count lives in the rate_limits table, so all worker processes and servers share it. One SQL
+    statement adds 1 and returns the new total atomically, so two requests at once can't both read the
+    same old count.
+    """
     window = settings.RESPONSE_RATE_WINDOW_SECONDS
-    key = f"answers:{client_ip(request)}:{int(time.time() // window)}"
-    cache.add(key, 0, timeout=window)  # start the counter at 0 if it doesn't exist yet
-    try:
-        count = cache.incr(key)
-    except ValueError:  # the counter expired between the two lines
-        cache.set(key, 1, timeout=window)
-        count = 1
+    window_number = int(time.time() // window)
+    key = f"answers:{client_ip(request)}:{window_number}"
+    expires_at = datetime.fromtimestamp((window_number + 1) * window, tz=dt_timezone.utc)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """INSERT INTO rate_limits (key, count, expires_at) VALUES (%s, 1, %s)
+               ON CONFLICT (key) DO UPDATE SET count = rate_limits.count + 1
+               RETURNING count""",
+            [key, expires_at],
+        )
+        count = cursor.fetchone()[0]
+        if random.random() < 0.01:  # now and then, throw away finished windows
+            cursor.execute("DELETE FROM rate_limits WHERE expires_at < now()")
     return count > settings.RESPONSE_RATE_LIMIT
 
 
@@ -99,12 +114,13 @@ def response(request):
         final_select_ms=data.get("final_select_ms"),
         **summarize(path, data.get("final_select_ms")),  # path_length, max_deviation, x_flips
     )
-    return JsonResponse({"ok": True})
+    # saved_at lets the results page know whether this answer is in a (cached) results snapshot yet
+    return JsonResponse({"ok": True, "saved_at": timezone.now().isoformat()})
 
 
 @require_GET
 def results(request):
-    return JsonResponse(queries.results(), safe=False)
+    return JsonResponse(queries.cached_results(), safe=False)  # cached for RESULTS_CACHE_SECONDS
 
 
 # ---------- Admin (scenario designer) ----------

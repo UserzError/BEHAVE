@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import Poll from './Poll.jsx'
 import { sendResponse } from './api.js'
 
-vi.mock('./api.js', () => ({ sendResponse: vi.fn(async () => true) }))
+vi.mock('./api.js', () => ({ sendResponse: vi.fn(async () => '2026-10-02T12:00:00+00:00') }))
 
 const scenario = (id) => ({
   id,

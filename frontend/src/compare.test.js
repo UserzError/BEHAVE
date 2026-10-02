@@ -63,3 +63,19 @@ describe('othersFor with Indifferent', () => {
     expect(others.hover.I).toBe(0)
   })
 })
+
+describe('othersFor with cached results', () => {
+  const r = { answers: 4, votes: { A: 3, B: 1, I: 0 }, avg_decision_ms: 5000, changed_rate: 0, avg_hover_ms: { A: 0, B: 0, I: 0 },
+    computed_at: '2026-10-02T12:00:10+00:00' }
+  const me = { choice: 'A', decision_ms: 5000, changed_answer: false, hover_ms: { A: 0, B: 0 }, saved: true }
+
+  it('subtracts your answer if it was saved before the snapshot', () => {
+    expect(othersFor(r, { ...me, saved_at: '2026-10-02T12:00:05+00:00' }).n).toBe(3)
+  })
+
+  it('does not subtract an answer saved after the snapshot (not counted yet)', () => {
+    const others = othersFor(r, { ...me, saved_at: '2026-10-02T12:00:15+00:00' })
+    expect(others.n).toBe(4)
+    expect(others.votes.A).toBe(3)
+  })
+})

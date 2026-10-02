@@ -1,5 +1,9 @@
 """queries.py - the database work that's more than a one-liner."""
 import csv
+
+from django.conf import settings
+from django.core.cache import cache
+from django.utils import timezone
 from django.db.models import Avg, Count, IntegerField, Q
 from django.db.models.fields.json import KT
 from django.db.models.functions import Cast, Coalesce
@@ -46,6 +50,19 @@ def results(answers=None):
         }
         for row in rows
     ]
+
+
+def cached_results():
+    """results(), remembered for RESULTS_CACHE_SECONDS. Every row gets `computed_at` (server time), so the
+    frontend can tell whether an answer saved at `saved_at` is already counted in these totals."""
+    seconds = settings.RESULTS_CACHE_SECONDS
+    rows = cache.get("results") if seconds else None
+    if rows is None:
+        computed_at = timezone.now().isoformat()
+        rows = [{**row, "computed_at": computed_at} for row in results()]
+        if seconds:
+            cache.set("results", rows, seconds)
+    return rows
 
 
 def next_scenario_id():

@@ -66,8 +66,8 @@ export default function Poll({ scenarios, demo, sessionId, onDone }) {
       ...getTelemetry(),                 // first_choice, decision_ms, hover_ms, changed_answer, final_select_ms, mouse_path
     }
     setSending(true)
-    const saved = await sendResponse(response, demo)
-    rememberAnswer(sessionId, response, saved) // for "How you compare" on the results page
+    const savedAt = await sendResponse(response, demo) // server time, or null if not saved
+    rememberAnswer(sessionId, response, savedAt) // for "How you compare" on the results page
     setSending(false)
     setSelected(null)
     if (index + 1 < scenarios.length) setIndex(index + 1)

@@ -64,6 +64,7 @@ Do this whenever you change the site or the scenarios, then update the server (s
    POSTGRES_HOST=YOUR_PG_ADDRESS
    POSTGRES_PORT=YOUR_PG_PORT
    TRUST_X_FORWARDED_FOR=true
+   DB_CONN_MAX_AGE=60
    EOF
    grep ADMIN_TOKEN .env   # copy this value somewhere safe: it unlocks the scenario designer
    ```
@@ -94,6 +95,18 @@ Do this whenever you change the site or the scenarios, then update the server (s
 4. Open `https://YOURNAME.pythonanywhere.com`.
    - Scenario designer: `/#/admin` (the `ADMIN_TOKEN` from step 2.4)
    - Results: `/#/results`
+
+## On other hosts (Render, Railway, Fly.io, a VPS…)
+
+These run your own start command instead of a WSGI file. Use gunicorn (already in `requirements.txt`; its settings
+are in `backend/gunicorn.conf.py`), from the `backend` folder:
+```bash
+HOST=0.0.0.0 venv/bin/gunicorn config.wsgi
+```
+It reads the port from `PORT` (most hosts set this automatically). Set the same `.env` values as above as the
+host's environment variables, and run `manage.py migrate` and `manage.py load_scenarios` once.
+Keep `WEB_CONCURRENCY` x `GUNICORN_THREADS` (default 9 x 4) under your Postgres plan's connection limit;
+small hosted databases often allow only 20–25 connections, so something like `WEB_CONCURRENCY=3` may be needed.
 
 ## 4. Updating the live site later
 

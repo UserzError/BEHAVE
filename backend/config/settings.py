@@ -57,6 +57,10 @@ ADMIN_TOKEN = env("ADMIN_TOKEN")
 # A full poll is ~12 answers, and many people can share one IP (school/event wifi), so it's generous.
 RESPONSE_RATE_LIMIT = int(env("RESPONSE_RATE_LIMIT", "300"))
 RESPONSE_RATE_WINDOW_SECONDS = int(env("RESPONSE_RATE_WINDOW_SECONDS", "600"))
+# /results is cached for this many seconds, so a busy results page doesn't recount every answer on each
+# view (0 turns the cache off). Each answer and each results snapshot carry a timestamp, so the
+# "How you compare" page knows whether your own answer is already in the totals.
+RESULTS_CACHE_SECONDS = int(env("RESULTS_CACHE_SECONDS", "15"))
 # Behind a hosting proxy every request seems to come from the proxy; set this to true there so the
 # visitor's real address is read from the X-Forwarded-For header instead.
 TRUST_X_FORWARDED_FOR = env("TRUST_X_FORWARDED_FOR", "false").lower() == "true"
@@ -90,6 +94,10 @@ DATABASES = {
         "PASSWORD": env("POSTGRES_PASSWORD"),
         "HOST": env("POSTGRES_HOST", "localhost"),
         "PORT": env("POSTGRES_PORT", "5432"),
+        # Keep a connection open between requests for this many seconds (0 = reconnect each time).
+        # gunicorn.conf.py sets 60; runserver should stay at 0 (it uses a new thread per request).
+        "CONN_MAX_AGE": int(env("DB_CONN_MAX_AGE", "0")),
+        "CONN_HEALTH_CHECKS": True,  # check a reused connection still works before using it
     }
 }
 
