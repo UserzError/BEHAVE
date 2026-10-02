@@ -24,10 +24,10 @@ class Response(models.Model):
     session_id = models.CharField(max_length=64, db_index=True)  # random id per participant; no personal info
     # Plain text instead of a link to Scenario, so answers are kept if a scenario is deleted.
     scenario_id = models.CharField(max_length=20, db_index=True)
-    choice = models.CharField(max_length=1)                                  # "A" (stay) or "B" (swerve)
+    choice = models.CharField(max_length=1)                                  # "A" (stay), "B" (swerve) or "I" (indifferent)
     first_choice = models.CharField(max_length=1, null=True, blank=True)     # the first option they clicked
     decision_ms = models.IntegerField()                                      # time to confirm, in milliseconds
-    hover_ms = models.JSONField()                                            # {"A": 3100, "B": 1250}
+    hover_ms = models.JSONField()                                            # {"A": 3100, "B": 1250, "I": 200}
     changed_answer = models.BooleanField()                                   # did they switch before confirming?
 
     # Study design (optional; older answers don't have them)

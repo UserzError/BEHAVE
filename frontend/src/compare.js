@@ -5,20 +5,24 @@ export const percent = (x) => `${Math.round(x * 100)}%`
 
 // Everyone else's numbers for one scenario (the totals minus your own answer, if it was counted).
 export function othersFor(row, mine) {
-  const total = row.answers ?? row.votes.A + row.votes.B
+  const total = row.answers ?? row.votes.A + row.votes.B + (row.votes.I ?? 0)
   const counted = mine.saved ? 1 : 0
   const n = Math.max(0, total - counted)
   // average without one value: (average × count − value) ÷ (count − 1)
   const without = (avg, value) => (n > 0 ? (avg * total - counted * value) / n : 0)
-  const votes = { ...row.votes }
+  const votes = { A: row.votes.A, B: row.votes.B, I: row.votes.I ?? 0 }
   if (counted) votes[mine.choice] = Math.max(0, votes[mine.choice] - 1)
-  const hover = row.avg_hover_ms ?? { A: 0, B: 0 }
+  const hover = { A: 0, B: 0, I: 0, ...row.avg_hover_ms }
   return {
     n,
     votes,
     avgMs: without(row.avg_decision_ms, mine.decision_ms),
     changedRate: without(row.changed_rate, mine.changed_answer ? 1 : 0),
-    hover: { A: without(hover.A, mine.hover_ms.A), B: without(hover.B, mine.hover_ms.B) },
+    hover: {
+      A: without(hover.A, mine.hover_ms.A),
+      B: without(hover.B, mine.hover_ms.B),
+      I: without(hover.I, mine.hover_ms.I ?? 0),
+    },
   }
 }
 

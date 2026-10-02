@@ -75,11 +75,11 @@ class ApiTests(TestCase):
         self.post("/response", {**ANSWER, "choice": "A", "changed_answer": False, "decision_ms": 4000,
                                 "hover_ms": {"A": 900, "B": 50}})
         [row] = self.client.get("/results").json()
-        self.assertEqual(row["votes"], {"A": 1, "B": 1})
+        self.assertEqual(row["votes"], {"A": 1, "B": 1, "I": 0})
         self.assertEqual(row["answers"], 2)
         self.assertEqual(row["avg_decision_ms"], 6210)
         self.assertEqual(row["changed_rate"], 0.5)
-        self.assertEqual(row["avg_hover_ms"], {"A": 2000, "B": 650})
+        self.assertEqual(row["avg_hover_ms"], {"A": 2000, "B": 650, "I": 0})
         self.assertEqual(row["seeded"], 0)
 
     def test_wrong_method_is_refused(self):
@@ -240,3 +240,38 @@ class NewFieldsTests(TestCase):
         self.assertFalse(seeded.filter(stay_on_left__isnull=True).exists())
         self.assertEqual(sorted(seeded.filter(session_id="seed-0000").values_list("position", flat=True)), [1])
         self.assertTrue(all(a.mouse_path is None for a in seeded))
+
+
+# ---------- Indifferent ----------
+
+@override_settings(ADMIN_TOKEN=TOKEN)
+class IndifferentTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        Scenario.objects.create(id="s1", data={**SCENARIO, "id": "s1"})
+
+    def post(self, body):
+        return self.client.post("/response", json.dumps(body), content_type="application/json")
+
+    def test_indifferent_answers_are_accepted_and_counted(self):
+        self.assertEqual(self.post({**ANSWER, "choice": "I", "first_choice": "A",
+                                    "hover_ms": {"A": 100, "B": 200, "I": 900}}).status_code, 200)
+        self.assertEqual(self.post({**ANSWER, "choice": "A"}).status_code, 200)  # old two-key hover still fine
+        [row] = self.client.get("/results").json()
+        self.assertEqual(row["votes"], {"A": 1, "B": 0, "I": 1})
+        self.assertEqual(row["avg_hover_ms"]["I"], 450)  # the old-style answer counts as 0
+
+    def test_bad_values_are_rejected(self):
+        self.assertEqual(self.post({**ANSWER, "choice": "C"}).status_code, 400)
+        self.assertEqual(self.post({**ANSWER, "first_choice": "X"}).status_code, 400)
+        self.assertEqual(self.post({**ANSWER, "hover_ms": {"A": 1, "B": 2, "X": 3}}).status_code, 400)
+
+    def test_csv_has_indifferent(self):
+        self.post({**ANSWER, "choice": "I", "hover_ms": {"A": 1, "B": 2, "I": 3}})
+        lines = self.client.get("/admin/export.csv", HTTP_X_ADMIN_TOKEN=TOKEN).content.decode().splitlines()
+        self.assertIn("hover_indifferent_ms", lines[0])
+        self.assertIn(",I,indifferent,", lines[1])
+
+    def test_simulated_answers_include_some_indifferent(self):
+        call_command("seed_responses", 60, stdout=open("/dev/null", "w"))
+        self.assertTrue(Response.objects.filter(choice="I").exists())

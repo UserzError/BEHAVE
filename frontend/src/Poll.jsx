@@ -1,4 +1,4 @@
-// The poll: one scenario at a time. Pick A or B (you can switch), then confirm.
+// The poll: one scenario at a time. Pick A, B or Indifferent (you can switch), then confirm.
 //
 // Study design: for each scenario, a coin flip decides whether "stay" (A) is shown on the left or the
 // right, so a habit of clicking one side doesn't look like a preference. The letters always mean the
@@ -15,12 +15,12 @@ const OUTCOME_FOR = { A: 'stay', B: 'swerve' } // A = stay, B = swerve
 
 export default function Poll({ scenarios, demo, sessionId, onDone }) {
   const [index, setIndex] = useState(0)         // which scenario is on screen
-  const [selected, setSelected] = useState(null) // "A", "B", or null
+  const [selected, setSelected] = useState(null) // "A", "B", "I" (indifferent), or null
   const [sending, setSending] = useState(false)
   // One coin flip per scenario, made once for this participant: is "stay" on the left?
   const [stayOnLeft] = useState(() => scenarios.map(() => Math.random() < 0.5))
   const { startTracking, hoverStart, hoverEnd, trackPointer, recordSelection, getTelemetry } = useTelemetry()
-  const optionRefs = useRef({ A: null, B: null })
+  const optionRefs = useRef({ A: null, B: null, I: null })
   const optionsArea = useRef(null)
   const headingRef = useRef(null)
 
@@ -31,7 +31,7 @@ export default function Poll({ scenarios, demo, sessionId, onDone }) {
   useEffect(() => {
     startTracking()
     // If the pointer is already resting on an option, no pointerenter fires, so start that hover now.
-    for (const letter of ['A', 'B']) {
+    for (const letter of ['A', 'B', 'I']) {
       if (optionRefs.current[letter]?.matches(':hover')) hoverStart(letter)
     }
     if (index > 0) headingRef.current?.focus()
@@ -60,7 +60,7 @@ export default function Poll({ scenarios, demo, sessionId, onDone }) {
     const response = {
       session_id: sessionId,             // random id for this participant
       scenario_id: scenario.id,
-      choice: selected,                  // final confirmed choice, "A" (stay) or "B" (swerve)
+      choice: selected,                  // final confirmed choice: "A" (stay), "B" (swerve) or "I" (indifferent)
       stay_on_left: stayOnLeft[index],   // which side "stay" was shown on
       position: index + 1,               // 1 = the first scenario this person saw
       ...getTelemetry(),                 // first_choice, decision_ms, hover_ms, changed_answer, final_select_ms, mouse_path
@@ -97,6 +97,20 @@ export default function Poll({ scenarios, demo, sessionId, onDone }) {
           ))}
         </HoverLabels>
       </div>
+
+      {/* Indifferent: no preference between the two outcomes. Tracked like A and B (selection, hover, switching). */}
+      <button
+        type="button"
+        ref={(node) => { optionRefs.current.I = node }}
+        className="indifferent"
+        aria-pressed={selected === 'I'}
+        onClick={() => select('I')}
+        onPointerEnter={(e) => e.pointerType !== 'touch' && hoverStart('I')}
+        onPointerLeave={(e) => e.pointerType !== 'touch' && hoverEnd('I')}
+      >
+        <strong>Indifferent</strong>
+        <span className="muted"> · I don't prefer either outcome</span>
+      </button>
 
       <button type="button" className="primary" disabled={!selected || sending} onClick={confirm}>
         Confirm choice

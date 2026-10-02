@@ -33,6 +33,14 @@ describe('useTelemetry', () => {
     })
   })
 
+  it('tracks hover on the Indifferent button and switching to it', () => {
+    const t = setup()
+    t.recordSelection('A')
+    t.hoverStart('I'); now = 700; t.hoverEnd('I')
+    t.recordSelection('I')
+    expect(t.getTelemetry()).toMatchObject({ first_choice: 'A', changed_answer: true, hover_ms: { A: 0, B: 0, I: 700 } })
+  })
+
   it('picking the same option twice is not a change of mind', () => {
     const t = setup()
     t.recordSelection('A')

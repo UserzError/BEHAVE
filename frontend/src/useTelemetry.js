@@ -3,7 +3,7 @@
 //
 // Recorded per scenario:
 //   decision_ms      time from the scenario appearing to confirming
-//   hover_ms         time the pointer rested on each option (A = stay, B = swerve)
+//   hover_ms         time the pointer rested on each option (A = stay, B = swerve, I = the Indifferent button)
 //   first_choice     the first option clicked; changed_answer: did they switch before confirming
 //   mouse_path       pointer positions [[t_ms, x, y], ...] relative to the options area (0–1), for
 //                    mouse-tracking measures (computed on the server, see backend/poll/trajectory.py)
@@ -17,8 +17,8 @@ const round3 = (v) => Math.round(v * 1000) / 1000
 
 export function useTelemetry() {
   const startTime = useRef(0)
-  const hoverTotals = useRef({ A: 0, B: 0 })         // total ms the pointer spent over each option
-  const hoverStartTimes = useRef({ A: null, B: null }) // when the current hover began (null = not hovering)
+  const hoverTotals = useRef({ A: 0, B: 0, I: 0 })               // total ms the pointer spent over each option
+  const hoverStartTimes = useRef({ A: null, B: null, I: null })  // when the current hover began (null = not hovering)
   const firstChoice = useRef(null)
   const lastChoice = useRef(null)
   const switched = useRef(false)                     // true if they ever picked one option, then the other
@@ -31,8 +31,8 @@ export function useTelemetry() {
   // Call when a new scenario appears on screen.
   const startTracking = useCallback(() => {
     startTime.current = performance.now()
-    hoverTotals.current = { A: 0, B: 0 }
-    hoverStartTimes.current = { A: null, B: null }
+    hoverTotals.current = { A: 0, B: 0, I: 0 }
+    hoverStartTimes.current = { A: null, B: null, I: null }
     firstChoice.current = null
     lastChoice.current = null
     switched.current = false
@@ -76,14 +76,16 @@ export function useTelemetry() {
   const getTelemetry = useCallback(() => {
     hoverEnd('A') // close out any hover still in progress so it counts
     hoverEnd('B')
+    hoverEnd('I')
     return {
       first_choice: firstChoice.current,                                  // first option clicked
       decision_ms: elapsed(),                                             // ms from scenario shown to confirm
       hover_ms: {                                                         // total hover ms per option
         A: Math.round(hoverTotals.current.A),
         B: Math.round(hoverTotals.current.B),
+        I: Math.round(hoverTotals.current.I),                             // on the Indifferent button
       },
-      changed_answer: switched.current,                                   // true if they switched options
+      changed_answer: switched.current,                                   // true if they switched options (incl. to/from Indifferent)
       final_select_ms: finalSelectMs.current,                             // when the final choice was clicked
       mouse_path: path.current.length ? path.current : null,              // null on touch screens
     }

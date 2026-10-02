@@ -135,7 +135,7 @@ All of these run in `backend/` (on Windows use `venv\Scripts\python` instead of 
 
 - **Starting fresh:** `/opt/homebrew/opt/postgresql@17/bin/dropdb behave`, then `createdb behave` and the `migrate` / `load_scenarios` steps again.
 - **Frontend tests:** `npm test` in `frontend/`.
-- **What's recorded per answer:** the choice, decision time, hover time on each option, whether they changed their mind, which side "stay" was shown on (sides are randomized per scenario), the scenario's position in the poll, and the mouse path with three summary measures (path length, maximum deviation from a straight line, and left/right direction changes). See `backend/poll/models.py`.
+- **What's recorded per answer:** the choice (stay, swerve, or **Indifferent**), decision time, hover time on each option (including the Indifferent button), whether they changed their mind, which side "stay" was shown on (sides are randomized per scenario), the scenario's position in the poll, and the mouse path with three summary measures (path length, maximum deviation from a straight line, and left/right direction changes). See `backend/poll/models.py`.
 - **Spam protection:** `POST /response` accepts at most 300 answers per IP address per 10 minutes (`RESPONSE_RATE_LIMIT` in `.env`).
 - **Database settings** (user, password, host) go in `backend/.env`; see `backend/.env.example`.
 - **Without the backend running**, the website still opens in demo mode with sample scenarios, but answers aren't saved.

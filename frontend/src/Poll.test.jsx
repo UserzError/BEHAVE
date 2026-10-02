@@ -24,8 +24,8 @@ afterEach(() => {
   sessionStorage.clear()
 })
 
-// Labels of the two option buttons, left to right.
-const order = () => screen.getAllByRole('button', { pressed: false }).map((b) => b.getAttribute('aria-label').split('.')[0])
+// Labels of the two scene options, left to right (the Indifferent button sits underneath them).
+const order = () => [...document.querySelectorAll('.option')].map((b) => b.getAttribute('aria-label').split('.')[0])
 
 describe('Poll', () => {
   it('puts stay on the left or right depending on the coin flip, and sends the layout and position', async () => {
@@ -52,6 +52,19 @@ describe('Poll', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Confirm choice' }))
     await waitFor(() => expect(onDone).toHaveBeenCalled())
     expect(sendResponse.mock.calls[1][0]).toMatchObject({ scenario_id: 's2', choice: 'A', stay_on_left: false, position: 2 })
+  })
+
+  it('Indifferent can be picked, switched to, and is sent as "I" with its hover time', async () => {
+    render(<Poll scenarios={[scenario('s1')]} demo={false} sessionId="abc" onDone={() => {}} />)
+    const indifferent = screen.getByRole('button', { name: /Indifferent/ })
+    fireEvent.click(screen.getByRole('button', { name: /Option A: Stay s1/ }))
+    fireEvent.click(indifferent)
+    expect(indifferent.getAttribute('aria-pressed')).toBe('true')
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm choice' }))
+    await waitFor(() => expect(sendResponse).toHaveBeenCalledTimes(1))
+    const sent = sendResponse.mock.calls[0][0]
+    expect(sent).toMatchObject({ choice: 'I', first_choice: 'A', changed_answer: true })
+    expect(Object.keys(sent.hover_ms)).toEqual(['A', 'B', 'I'])
   })
 
   it('confirm is disabled until an option is picked', () => {

@@ -6,9 +6,9 @@ import { compareTime, longerLook, othersFor, percent, seconds } from './compare.
 
 function ScenarioComparison({ row, mine }) {
   const others = othersFor(row, mine)
-  const label = { A: row.labelA, B: row.labelB }
+  const label = { A: row.labelA, B: row.labelB, I: 'Indifferent' }
   const sameShare = others.n ? others.votes[mine.choice] / others.n : 0
-  const shareA = others.n ? others.votes.A / others.n : 0
+  const share = (x) => (others.n ? others.votes[x] / others.n : 0)
   const time = compareTime(mine.decision_ms, others.avgMs)
   const myLook = longerLook(mine.hover_ms)
   const othersLook = longerLook(others.hover)
@@ -19,20 +19,19 @@ function ScenarioComparison({ row, mine }) {
 
       <p className="compare-choice">
         <span className={`choice-chip choice-${mine.choice}`}>{mine.choice}</span>
-        You chose <strong>{label[mine.choice]}</strong>
+        <span>{mine.choice === 'I' ? <>You were <strong>indifferent</strong></> : <>You chose <strong>{label[mine.choice]}</strong></>}</span>
       </p>
       {others.n > 0 ? (
         <>
           <div className="split-bar" aria-hidden="true">
-            <span className={`split-A ${mine.choice === 'A' ? 'is-yours' : ''}`} style={{ flexGrow: Math.max(shareA, 0.001) }}>
-              {shareA >= 0.12 && `A ${percent(shareA)}`}
-            </span>
-            <span className={`split-B ${mine.choice === 'B' ? 'is-yours' : ''}`} style={{ flexGrow: Math.max(1 - shareA, 0.001) }}>
-              {1 - shareA >= 0.12 && `B ${percent(1 - shareA)}`}
-            </span>
+            {['A', 'I', 'B'].map((x) => share(x) > 0 && (
+              <span key={x} className={`split-${x} ${mine.choice === x ? 'is-yours' : ''}`} style={{ flexGrow: share(x) }}>
+                {share(x) >= 0.12 && `${x === 'I' ? 'Indiff.' : x} ${percent(share(x))}`}
+              </span>
+            ))}
           </div>
           <p className="compare-headline">
-            <strong>{percent(sameShare)}</strong> of {others.n} other{others.n === 1 ? '' : 's'} chose the same
+            <strong>{percent(sameShare)}</strong> of {others.n} other{others.n === 1 ? '' : 's'} {mine.choice === 'I' ? 'were also indifferent' : 'chose the same'}
             {sameShare > 0.5 ? ': you went with the majority.' : sameShare < 0.5 ? ': you went against the majority.' : '.'}
           </p>
         </>
@@ -51,7 +50,7 @@ function ScenarioComparison({ row, mine }) {
         <div>
           <dt>Changed your mind</dt>
           <dd>
-            {mine.changed_answer ? `Yes (first picked ${mine.first_choice})` : 'No'}
+            {mine.changed_answer ? `Yes (first picked ${mine.first_choice === 'I' ? 'Indifferent' : mine.first_choice})` : 'No'}
             {others.n > 0 && <> · {percent(others.changedRate)} of others did</>}
           </dd>
         </div>
@@ -64,6 +63,7 @@ function ScenarioComparison({ row, mine }) {
             {others.n > 0 && othersLook && (
               <> · others: {othersLook} on average ({seconds(others.hover[othersLook])} vs {seconds(others.hover[othersLook === 'A' ? 'B' : 'A'])})</>
             )}
+            {(mine.hover_ms.I ?? 0) >= 50 && <> · you spent {seconds(mine.hover_ms.I)} on Indifferent</>}
           </dd>
         </div>
       </dl>
