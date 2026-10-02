@@ -20,7 +20,8 @@ threads = int(os.environ.get("GUNICORN_THREADS", 4))
 worker_class = "gthread"
 backlog = 2048          # how many connections may wait for a free worker
 timeout = 30            # restart a worker stuck on one request for longer than this
-accesslog = "-"         # log requests to the terminal
+accesslog = "-"         # log requests to the terminal...
+access_log_format = '"%(r)s" %(s)s %(b)s %(M)sms'  # ...without the visitor's IP address (privacy)
 
 # Under gunicorn, keep each thread's database connection open between requests instead of reconnecting
 # every time (unless .env says otherwise). settings.py reads this.

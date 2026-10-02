@@ -3,6 +3,7 @@
 Each view reads the request, checks it with validate.py, uses the database (models.py), and
 returns JSON. Errors come back as {"error": "..."} with a 4xx status, same as the Flask version.
 """
+import hashlib
 import hmac
 import json
 import random
@@ -11,7 +12,7 @@ from datetime import datetime, timezone as dt_timezone
 
 from django.conf import settings
 
-from django.db import connection
+from django.db import IntegrityError, connection, transaction
 from django.utils import timezone
 from django.http import FileResponse, HttpResponse, JsonResponse
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
@@ -58,6 +59,13 @@ def scenarios(request):
     return JsonResponse([s.data for s in Scenario.objects.all()], safe=False)  # safe=False allows a list
 
 
+def ip_fingerprint(request):
+    """A one-way hash of the visitor's IP address, so the rate limit can tell visitors apart without
+    storing their actual address. Keyed with SECRET_KEY, so it can't be reversed by guessing IPs."""
+    digest = hmac.new(settings.SECRET_KEY.encode(), client_ip(request).encode(), hashlib.sha256)
+    return digest.hexdigest()[:32]
+
+
 def client_ip(request):
     """The visitor's IP address (see TRUST_X_FORWARDED_FOR in settings.py)."""
     if settings.TRUST_X_FORWARDED_FOR:
@@ -76,7 +84,7 @@ def over_rate_limit(request):
     """
     window = settings.RESPONSE_RATE_WINDOW_SECONDS
     window_number = int(time.time() // window)
-    key = f"answers:{client_ip(request)}:{window_number}"
+    key = f"answers:{ip_fingerprint(request)}:{window_number}"  # hashed: no raw IP is stored
     expires_at = datetime.fromtimestamp((window_number + 1) * window, tz=dt_timezone.utc)
     with connection.cursor() as cursor:
         cursor.execute(
@@ -100,20 +108,27 @@ def response(request):
     if problem:
         return error(problem)
     path = data.get("mouse_path") or None
-    Response.objects.create(
-        session_id=data["session_id"],
-        scenario_id=data["scenario_id"],
-        choice=data["choice"],
-        first_choice=data.get("first_choice"),
-        decision_ms=data["decision_ms"],
-        hover_ms=data["hover_ms"],
-        changed_answer=data["changed_answer"],
-        stay_on_left=data.get("stay_on_left"),
-        position=data.get("position"),
-        mouse_path=path,
-        final_select_ms=data.get("final_select_ms"),
-        **summarize(path, data.get("final_select_ms")),  # path_length, max_deviation, x_flips
-    )
+    try:
+        with transaction.atomic():  # so a refused duplicate doesn't break the rest of the request
+            Response.objects.create(
+                session_id=data["session_id"],
+                scenario_id=data["scenario_id"],
+                choice=data["choice"],
+                first_choice=data.get("first_choice"),
+                decision_ms=data["decision_ms"],
+                hover_ms=data["hover_ms"],
+                changed_answer=data["changed_answer"],
+                stay_on_left=data.get("stay_on_left"),
+                position=data.get("position"),
+                mouse_path=path,
+                final_select_ms=data.get("final_select_ms"),
+                **summarize(path, data.get("final_select_ms")),  # path_length, max_deviation, x_flips
+            )
+    except IntegrityError:
+        # Already answered (a double click or a retried request): keep the first answer and say OK,
+        # so the participant can carry on. See the one-answer-per-scenario rule in models.py.
+        first = Response.objects.get(session_id=data["session_id"], scenario_id=data["scenario_id"])
+        return JsonResponse({"ok": True, "already_answered": True, "saved_at": first.created_at.isoformat()})
     # saved_at lets the results page know whether this answer is in a (cached) results snapshot yet
     return JsonResponse({"ok": True, "saved_at": timezone.now().isoformat()})
 

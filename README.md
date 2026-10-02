@@ -59,7 +59,7 @@ The backend is a Django server on port 5000, using the PostgreSQL database `beha
 
 **macOS / Linux**
 ```bash
-git clone -b django-postgres https://github.com/UserzError/BEHAVE.git
+git clone https://github.com/UserzError/BEHAVE.git
 cd BEHAVE/backend
 python3.12 -m venv venv
 venv/bin/pip install -r requirements.txt
@@ -72,7 +72,7 @@ venv/bin/python manage.py runserver 5000
 
 **Windows (PowerShell)** (replace `YOUR_POSTGRES_PASSWORD` with the password you chose)
 ```powershell
-git clone -b django-postgres https://github.com/UserzError/BEHAVE.git
+git clone https://github.com/UserzError/BEHAVE.git
 cd BEHAVE\backend
 py -3.12 -m venv venv
 venv\Scripts\python -m pip install -r requirements.txt
@@ -136,7 +136,8 @@ All of these run in `backend/` (on Windows use `venv\Scripts\python` instead of 
 - **Starting fresh:** `/opt/homebrew/opt/postgresql@17/bin/dropdb behave`, then `createdb behave` and the `migrate` / `load_scenarios` steps again.
 - **Frontend tests:** `npm test` in `frontend/`.
 - **What's recorded per answer:** the choice (stay, swerve, or **Indifferent**), decision time, hover time on each option (including the Indifferent button), whether they changed their mind, which side "stay" was shown on (sides are randomized per scenario), the scenario's position in the poll, and the mouse path with three summary measures (path length, maximum deviation from a straight line, and left/right direction changes). See `backend/poll/models.py`.
-- **Spam protection:** `POST /response` accepts at most 300 answers per IP address per 10 minutes (`RESPONSE_RATE_LIMIT` in `.env`). The count is kept in the database, so it holds across several worker processes or servers.
+- **Spam protection:** `POST /response` accepts at most 300 answers per IP address per 10 minutes (`RESPONSE_RATE_LIMIT` in `.env`). The count is kept in the database, so it holds across several worker processes or servers. IP addresses are never stored: the count is keyed by a one-way hash of the address, and gunicorn's request log leaves them out.
+- **One answer per scenario:** each participant (session) can answer a scenario once. A repeat (a double click or a retried request) keeps the first answer and still gets an OK.
 - **Results cache:** `/results` is cached for 15 seconds (`RESULTS_CACHE_SECONDS`), so new answers appear on the results page within that time.
 - **Production server:** `runserver` is for development only. On a Linux or macOS server, run `venv/bin/gunicorn config.wsgi` instead (settings in `backend/gunicorn.conf.py`; port from `PORT`). In a local load test, gunicorn handled about 2,500 requests per second with no errors at 400 simultaneous participants, while `runserver` started failing at 200 (Postgres ran out of connections).
 - **Database settings** (user, password, host) go in `backend/.env`; see `backend/.env.example`.

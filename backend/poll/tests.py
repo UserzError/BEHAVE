@@ -76,8 +76,8 @@ class ApiTests(TestCase):
 
     def test_results_totals_and_averages(self):
         self.post("/response", ANSWER)
-        self.post("/response", {**ANSWER, "choice": "A", "changed_answer": False, "decision_ms": 4000,
-                                "hover_ms": {"A": 900, "B": 50}})
+        self.post("/response", {**ANSWER, "session_id": "def", "choice": "A", "changed_answer": False,
+                                "decision_ms": 4000, "hover_ms": {"A": 900, "B": 50}})
         [row] = self.client.get("/results").json()
         self.assertEqual(row["votes"], {"A": 1, "B": 1, "I": 0})
         self.assertEqual(row["answers"], 2)
@@ -217,7 +217,7 @@ class NewFieldsTests(TestCase):
 
     @override_settings(RESPONSE_RATE_LIMIT=3)
     def test_rate_limit(self):
-        codes = [self.post(ANSWER).status_code for _ in range(5)]
+        codes = [self.post({**ANSWER, "session_id": f"person-{i}"}).status_code for i in range(5)]
         self.assertEqual(codes, [200, 200, 200, 429, 429])
         self.assertEqual(Response.objects.count(), 3)
 
@@ -258,7 +258,7 @@ class IndifferentTests(TestCase):
     def test_indifferent_answers_are_accepted_and_counted(self):
         self.assertEqual(self.post({**ANSWER, "choice": "I", "first_choice": "A",
                                     "hover_ms": {"A": 100, "B": 200, "I": 900}}).status_code, 200)
-        self.assertEqual(self.post({**ANSWER, "choice": "A"}).status_code, 200)  # old two-key hover still fine
+        self.assertEqual(self.post({**ANSWER, "session_id": "def", "choice": "A"}).status_code, 200)  # old two-key hover still fine
         [row] = self.client.get("/results").json()
         self.assertEqual(row["votes"], {"A": 1, "B": 0, "I": 1})
         self.assertEqual(row["avg_hover_ms"]["I"], 450)  # the old-style answer counts as 0
@@ -286,14 +286,17 @@ class ScalingTests(TestCase):
         cache.clear()
         Scenario.objects.create(id="s1", data={**SCENARIO, "id": "s1"})
 
-    def post(self, body=ANSWER, ip="10.0.0.1"):
+    def post(self, body=None, ip="10.0.0.1"):
+        self.people = getattr(self, "people", 0) + 1  # a new participant for every call
+        body = body or {**ANSWER, "session_id": f"person-{self.people}"}
         return self.client.post("/response", json.dumps(body), content_type="application/json", REMOTE_ADDR=ip)
 
     @override_settings(RESPONSE_RATE_LIMIT=2)
     def test_rate_limit_is_counted_in_the_database_per_ip(self):
         self.assertEqual([self.post().status_code for _ in range(3)], [200, 200, 429])
         self.assertEqual(self.post(ip="10.0.0.2").status_code, 200)  # another visitor has their own count
-        self.assertEqual(RateLimit.objects.get(key__contains="10.0.0.1").count, 3)
+        self.assertFalse(RateLimit.objects.filter(key__contains="10.0.0.1").exists())  # no raw IP stored
+        self.assertEqual(sorted(RateLimit.objects.values_list("count", flat=True)), [1, 3])  # one hashed key per IP
 
     @override_settings(RESULTS_CACHE_SECONDS=60)
     def test_results_are_cached_with_a_timestamp(self):
@@ -313,3 +316,29 @@ class ScalingTests(TestCase):
         self.client.get("/results")
         self.post()
         self.assertEqual(self.client.get("/results").json()[0]["answers"], 2)
+
+
+# ---------- one answer per participant per scenario ----------
+
+class OneAnswerTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        Scenario.objects.create(id="s1", data={**SCENARIO, "id": "s1"})
+
+    def post(self, body):
+        return self.client.post("/response", json.dumps(body), content_type="application/json")
+
+    def test_a_repeat_keeps_the_first_answer_and_still_says_ok(self):
+        first = self.post({**ANSWER, "choice": "A"}).json()
+        again = self.post({**ANSWER, "choice": "B"})  # double click / retry with a different choice
+        self.assertEqual(again.status_code, 200)
+        self.assertTrue(again.json()["already_answered"])
+        self.assertEqual(Response.objects.count(), 1)
+        self.assertEqual(Response.objects.get().choice, "A")
+        self.assertLessEqual(again.json()["saved_at"], first["saved_at"])  # points at the original answer
+
+    def test_same_person_can_answer_other_scenarios(self):
+        Scenario.objects.create(id="s2", data={**SCENARIO, "id": "s2"})
+        self.post(ANSWER)
+        self.assertNotIn("already_answered", self.post({**ANSWER, "scenario_id": "s2"}).json())
+        self.assertEqual(Response.objects.count(), 2)

@@ -45,6 +45,10 @@ class Response(models.Model):
 
     class Meta:
         db_table = "responses"
+        constraints = [
+            # One answer per participant per scenario. A repeat (double click, retried request) keeps the first.
+            models.UniqueConstraint(fields=["session_id", "scenario_id"], name="one_answer_per_scenario"),
+        ]
 
     def __str__(self):
         return f"{self.session_id} {self.scenario_id} {self.choice}"
@@ -54,7 +58,7 @@ class RateLimit(models.Model):
     """How many answers one IP address has sent in one time window. Kept in the database so that every
     worker process (and every server) shares the same count. See views.over_rate_limit."""
 
-    key = models.CharField(primary_key=True, max_length=120)  # "answers:<ip>:<window number>"
+    key = models.CharField(primary_key=True, max_length=120)  # "answers:<hashed ip>:<window number>"
     count = models.IntegerField()
     expires_at = models.DateTimeField(db_index=True)  # old windows are cleaned up after this
 

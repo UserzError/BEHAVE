@@ -44,7 +44,7 @@ Do this whenever you change the site or the scenarios, then update the server (s
    ```
 3. Get the code and install it:
    ```bash
-   git clone -b django-postgres https://github.com/UserzError/BEHAVE.git
+   git clone https://github.com/UserzError/BEHAVE.git
    cd BEHAVE/backend
    python3.12 -m venv venv
    venv/bin/pip install -r requirements.txt
