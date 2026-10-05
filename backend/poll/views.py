@@ -108,6 +108,7 @@ def response(request):
     if problem:
         return error(problem)
     path = data.get("mouse_path") or None
+    path_summary = summarize(path, data.get("final_select_ms"))  # path_length, max_deviation, x_flips
     try:
         with transaction.atomic():  # so a refused duplicate doesn't break the rest of the request
             Response.objects.create(
@@ -122,20 +123,29 @@ def response(request):
                 position=data.get("position"),
                 mouse_path=path,
                 final_select_ms=data.get("final_select_ms"),
-                **summarize(path, data.get("final_select_ms")),  # path_length, max_deviation, x_flips
+                **path_summary,
             )
     except IntegrityError:
         # Already answered (a double click or a retried request): keep the first answer and say OK,
         # so the participant can carry on. See the one-answer-per-scenario rule in models.py.
         first = Response.objects.get(session_id=data["session_id"], scenario_id=data["scenario_id"])
-        return JsonResponse({"ok": True, "already_answered": True, "saved_at": first.created_at.isoformat()})
-    # saved_at lets the results page know whether this answer is in a (cached) results snapshot yet
-    return JsonResponse({"ok": True, "saved_at": timezone.now().isoformat()})
+        return JsonResponse({"ok": True, "already_answered": True, "saved_at": first.created_at.isoformat(),
+                             "path": {"path_length": first.path_length, "max_deviation": first.max_deviation,
+                                      "x_flips": first.x_flips}})
+    # saved_at lets the results page know whether this answer is in a (cached) results snapshot yet;
+    # path lets "How you compare" show your mouse-path measures without recalculating them.
+    return JsonResponse({"ok": True, "saved_at": timezone.now().isoformat(), "path": path_summary})
 
 
 @require_GET
 def results(request):
     return JsonResponse(queries.cached_results(), safe=False)  # cached for RESULTS_CACHE_SECONDS
+
+
+@require_GET
+def insights(request):
+    """Study-design checks for the results page (left/right choices, effects of position)."""
+    return JsonResponse(queries.cached_insights())
 
 
 # ---------- Admin (scenario designer) ----------

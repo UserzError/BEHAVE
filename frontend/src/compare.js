@@ -16,9 +16,20 @@ export function othersFor(row, mine) {
   const votes = { A: row.votes.A, B: row.votes.B, I: row.votes.I ?? 0 }
   if (counted) votes[mine.choice] = Math.max(0, votes[mine.choice] - 1)
   const hover = { A: 0, B: 0, I: 0, ...row.avg_hover_ms }
+  // Mouse paths: average of everyone else's, from answers that have a path.
+  const paths = row.paths ?? {}
+  const pathCount = paths.answers ?? 0
+  const myDev = mine.path?.max_deviation
+  const pathCounted = counted && myDev != null ? 1 : 0
+  const otherPaths = pathCount - pathCounted
+  const deviation = paths.avg_max_deviation == null || otherPaths <= 0
+    ? null
+    : (paths.avg_max_deviation * pathCount - pathCounted * myDev) / otherPaths
   return {
     n,
     votes,
+    pathDeviation: deviation,
+    pathAnswers: Math.max(0, otherPaths),
     avgMs: without(row.avg_decision_ms, mine.decision_ms),
     changedRate: without(row.changed_rate, mine.changed_answer ? 1 : 0),
     hover: {

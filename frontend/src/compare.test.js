@@ -79,3 +79,21 @@ describe('othersFor with cached results', () => {
     expect(others.votes.A).toBe(3)
   })
 })
+
+describe('othersFor mouse paths', () => {
+  it('averages everyone else\'s path deviation, without yours', () => {
+    const r = { answers: 3, votes: { A: 2, B: 1, I: 0 }, avg_decision_ms: 1000, changed_rate: 0, avg_hover_ms: {},
+      paths: { answers: 2, avg_max_deviation: 0.3 } }
+    const me = { choice: 'A', decision_ms: 1000, changed_answer: false, hover_ms: { A: 0, B: 0 }, saved: true,
+      path: { max_deviation: 0.5 } }
+    const others = othersFor(r, me)
+    expect(others.pathDeviation).toBeCloseTo(0.1) // (0.3 x 2 - 0.5) / 1
+    expect(others.pathAnswers).toBe(1)
+  })
+
+  it('has no average when nobody else has a path', () => {
+    const r = { answers: 1, votes: { A: 1, B: 0 }, avg_decision_ms: 1, changed_rate: 0, avg_hover_ms: {}, paths: { answers: 1, avg_max_deviation: 0.5 } }
+    const me = { choice: 'A', decision_ms: 1, changed_answer: false, hover_ms: { A: 0, B: 0 }, saved: true, path: { max_deviation: 0.5 } }
+    expect(othersFor(r, me).pathDeviation).toBe(null)
+  })
+})

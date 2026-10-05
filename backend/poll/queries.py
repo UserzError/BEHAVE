@@ -31,6 +31,11 @@ def results(answers=None):
             avg_hover_b=Avg(Cast(KT("hover_ms__B"), IntegerField())),
             avg_hover_i=Avg(Coalesce(Cast(KT("hover_ms__I"), IntegerField()), 0)),  # 0 for older answers
             seeded=Count("id", filter=Q(session_id__startswith=SEED_PREFIX)),
+            # mouse paths (only answers that have one: not touch screens, not simulated)
+            path_answers=Count("id", filter=Q(path_length__isnull=False)),
+            avg_path_length=Avg("path_length"),
+            avg_max_deviation=Avg("max_deviation"),
+            avg_x_flips=Avg("x_flips"),
         )
         .order_by("scenario_id")
     )
@@ -47,9 +52,63 @@ def results(answers=None):
                 "I": round(row["avg_hover_i"] or 0),
             },
             "seeded": row["seeded"],
+            "paths": {
+                "answers": row["path_answers"],
+                "avg_path_length": None if row["avg_path_length"] is None else round(row["avg_path_length"], 3),
+                "avg_max_deviation": None if row["avg_max_deviation"] is None else round(row["avg_max_deviation"], 3),
+                "avg_x_flips": None if row["avg_x_flips"] is None else round(float(row["avg_x_flips"]), 2),
+            },
         }
         for row in rows
     ]
+
+
+def insights():
+    """Checks on the study design, across all answers:
+
+    side         Do people pick whichever option is on the LEFT more often than the right? With sides
+                 randomized, a fair poll should give about 50%. (Only A/B answers that recorded a side.)
+    by_position  Decision time, changed-mind rate and indifferent share for the 1st, 2nd, 3rd... scenario
+                 each person saw: shows people speeding up, tiring, or settling in over the poll.
+    """
+    sided = Response.objects.filter(stay_on_left__isnull=False, choice__in=["A", "B"])
+    side = sided.aggregate(
+        answers=Count("id"),
+        chose_left=Count("id", filter=Q(choice="A", stay_on_left=True) | Q(choice="B", stay_on_left=False)),
+        seeded=Count("id", filter=Q(session_id__startswith=SEED_PREFIX)),
+    )
+    side["left_share"] = round(side["chose_left"] / side["answers"], 3) if side["answers"] else None
+
+    by_position = [
+        {
+            "position": row["position"],
+            "answers": row["answers"],
+            "avg_decision_ms": round(row["avg_decision_ms"] or 0),
+            "changed_rate": round(float(row["changed_rate"] or 0), 3),
+            "indifferent_rate": round(row["indifferent"] / row["answers"], 3) if row["answers"] else 0,
+        }
+        for row in Response.objects.filter(position__isnull=False)
+        .values("position")
+        .annotate(
+            answers=Count("id"),
+            avg_decision_ms=Avg("decision_ms"),
+            changed_rate=Avg(Cast("changed_answer", IntegerField())),
+            indifferent=Count("id", filter=Q(choice="I")),
+        )
+        .order_by("position")
+    ]
+    return {"side": side, "by_position": by_position}
+
+
+def cached_insights():
+    """insights(), remembered for RESULTS_CACHE_SECONDS like the results."""
+    seconds = settings.RESULTS_CACHE_SECONDS
+    data = cache.get("insights") if seconds else None
+    if data is None:
+        data = {**insights(), "computed_at": timezone.now().isoformat()}
+        if seconds:
+            cache.set("insights", data, seconds)
+    return data
 
 
 def cached_results():

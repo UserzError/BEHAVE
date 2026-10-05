@@ -10,6 +10,7 @@ export default defineConfig({
       '/scenarios': 'http://localhost:5000',
       '/response': 'http://localhost:5000',
       '/results': 'http://localhost:5000',
+      '/insights': 'http://localhost:5000',
       '/admin': 'http://localhost:5000', // scenario designer API (the page itself is at /#/admin)
     },
   },

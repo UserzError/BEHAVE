@@ -14,6 +14,7 @@ urlpatterns = [
     path("scenarios", views.scenarios),   # GET  all scenarios
     path("response", views.response),     # POST one answer
     path("results", views.results),       # GET  vote counts and timing per scenario
+    path("insights", views.insights),     # GET  study-design checks (left/right, position in the poll)
 
     # Scenario designer (needs the X-Admin-Token header)
     path("admin/check", views.admin_check),                          # GET    is the token right?

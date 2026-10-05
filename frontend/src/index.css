@@ -664,3 +664,55 @@ td.nowrap, .nowrap { white-space: nowrap; }
 @media (max-width: 480px) {
   .compare-stats div { grid-template-columns: 1fr; gap: 0; }
 }
+
+/* ---------- Results: insight charts ---------- */
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.subheading { margin: 22px 0 4px; font-size: 1.05rem; }
+.table-view { margin-top: 12px; }
+.table-view summary { cursor: pointer; color: var(--text-muted); font-size: 0.9rem; }
+.table-view table { margin-top: 8px; }
+
+.stat-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin: 8px 0 4px; }
+.stat { display: flex; align-items: baseline; gap: 10px; }
+.stat-value { font-size: 2.2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.stat-label { color: var(--text-muted); max-width: 260px; }
+.stat-note { margin: 0; flex: 1 1 260px; }
+
+/* ---------- "How you compare": mouse path sketch ---------- */
+
+.path-sketch { display: block; width: 100%; max-width: 240px; height: auto; margin-top: 4px; }
+.sketch-box { fill: var(--bg); stroke: var(--border); stroke-width: 0.012; }
+.sketch-box.sketch-A { stroke: var(--red); }
+.sketch-box.sketch-B { stroke: var(--blue); }
+.sketch-box.is-chosen { stroke-width: 0.03; }
+.sketch-letter { font-size: 0.22px; font-weight: 800; fill: var(--text-muted); }
+.sketch-small { font-size: 0.07px; fill: var(--text-muted); }
+.sketch-path { fill: none; stroke: var(--text); stroke-width: 0.014; stroke-linejoin: round; stroke-linecap: round; }
+.sketch-path-after { fill: none; stroke: var(--text-muted); stroke-width: 0.008; stroke-dasharray: 0.02 0.02; opacity: 0.6; }
+.sketch-start { fill: var(--text-muted); }
+.sketch-end { fill: var(--text); }
+
+/* ---------- Front page: privacy ---------- */
+
+.privacy-list { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.privacy-list li { color: var(--text-muted); }
+.privacy-list strong { color: var(--text); }
+
+/* ---------- Accessibility: letter tags need 4.5:1 contrast for their small white text ---------- */
+
+:root { --chip-red: #c4302f; --chip-blue: #2463b8; }
+.option-A .option-letter-chip, .choice-A { background: var(--chip-red); }
+.option-B .option-letter-chip, .choice-B { background: var(--chip-blue); }
+.choice-I { background: #6b6a65; }
+.path-figure { margin: 8px 0 0; }
+.path-figure figcaption { margin-top: 4px; max-width: 420px; }
+.results .table-wrap td:nth-child(2), .results .table-wrap td:nth-child(3) { min-width: 150px; }

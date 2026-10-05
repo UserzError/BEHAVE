@@ -71,6 +71,16 @@ export default function Landing({ ready, error, onStart }) {
         </p>
       </section>
 
+      <section className="landing-section" aria-labelledby="privacy-heading">
+        <h2 id="privacy-heading">Your privacy</h2>
+        <ul className="privacy-list">
+          <li><strong>Anonymous.</strong> No names, emails or accounts. Each visit gets a random ID, nothing more.</li>
+          <li><strong>What's recorded:</strong> your choice for each scenario, how long you took, how long your pointer rested on each option, whether you changed your mind, and the path your mouse took while deciding (not on touch screens).</li>
+          <li><strong>Your IP address is never stored.</strong> A one-way scrambled version is kept for a few minutes to stop spam, then deleted.</li>
+          <li><strong>Demonstration only.</strong> The answers aren't used for research.</li>
+        </ul>
+      </section>
+
       <section className="landing-section about" aria-labelledby="about-heading">
         <h2 id="about-heading">About the project</h2>
         <div className="about-grid">

@@ -2,6 +2,7 @@
 // next to everyone else's. Your own answer is taken back out of the totals when it was saved,
 // so you're compared with other people, not with yourself.
 
+import PathSketch from './PathSketch.jsx'
 import { compareTime, longerLook, othersFor, percent, seconds } from './compare.js'
 
 function ScenarioComparison({ row, mine }) {
@@ -66,7 +67,26 @@ function ScenarioComparison({ row, mine }) {
             {(mine.hover_ms.I ?? 0) >= 50 && <> · you spent {seconds(mine.hover_ms.I)} on Indifferent</>}
           </dd>
         </div>
+        <div>
+          <dt>Mouse path</dt>
+          <dd>
+            {mine.path?.max_deviation != null
+              ? <>Strayed {mine.path.max_deviation.toFixed(2)} from a straight line, {mine.path.x_flips} change{mine.path.x_flips === 1 ? '' : 's'} of direction</>
+              : 'No mouse path (touch screen)'}
+            {others.pathDeviation != null && <> · others strayed {others.pathDeviation.toFixed(2)} on average</>}
+          </dd>
+        </div>
       </dl>
+      {mine.mouse_path?.length > 1 && (
+        <figure className="path-figure">
+          <PathSketch path={mine.mouse_path} finalSelectMs={mine.final_select_ms} stayOnLeft={mine.stay_on_left} choice={mine.choice} />
+          <figcaption className="muted small">
+            Your mouse, laid out as you saw the options. The solid line runs to your final click; the dashed line is
+            where it went after. "Strayed" is the furthest the line bent away from a straight path, measured against
+            the size of the options area (0 = perfectly straight).
+          </figcaption>
+        </figure>
+      )}
     </article>
   )
 }

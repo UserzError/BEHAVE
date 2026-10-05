@@ -1,0 +1,95 @@
+{
+  "side": {
+    "answers": 412,
+    "chose_left": 214,
+    "seeded": 0,
+    "left_share": 0.519
+  },
+  "by_position": [
+    {
+      "position": 1,
+      "answers": 40,
+      "avg_decision_ms": 11800,
+      "changed_rate": 0.34,
+      "indifferent_rate": 0.05
+    },
+    {
+      "position": 2,
+      "answers": 40,
+      "avg_decision_ms": 10200,
+      "changed_rate": 0.3,
+      "indifferent_rate": 0.06
+    },
+    {
+      "position": 3,
+      "answers": 40,
+      "avg_decision_ms": 9300,
+      "changed_rate": 0.27,
+      "indifferent_rate": 0.06
+    },
+    {
+      "position": 4,
+      "answers": 39,
+      "avg_decision_ms": 8600,
+      "changed_rate": 0.25,
+      "indifferent_rate": 0.07
+    },
+    {
+      "position": 5,
+      "answers": 39,
+      "avg_decision_ms": 8100,
+      "changed_rate": 0.24,
+      "indifferent_rate": 0.07
+    },
+    {
+      "position": 6,
+      "answers": 39,
+      "avg_decision_ms": 7700,
+      "changed_rate": 0.22,
+      "indifferent_rate": 0.08
+    },
+    {
+      "position": 7,
+      "answers": 39,
+      "avg_decision_ms": 7400,
+      "changed_rate": 0.21,
+      "indifferent_rate": 0.08
+    },
+    {
+      "position": 8,
+      "answers": 38,
+      "avg_decision_ms": 7100,
+      "changed_rate": 0.21,
+      "indifferent_rate": 0.09
+    },
+    {
+      "position": 9,
+      "answers": 38,
+      "avg_decision_ms": 6900,
+      "changed_rate": 0.2,
+      "indifferent_rate": 0.09
+    },
+    {
+      "position": 10,
+      "answers": 38,
+      "avg_decision_ms": 6800,
+      "changed_rate": 0.19,
+      "indifferent_rate": 0.1
+    },
+    {
+      "position": 11,
+      "answers": 38,
+      "avg_decision_ms": 6600,
+      "changed_rate": 0.19,
+      "indifferent_rate": 0.1
+    },
+    {
+      "position": 12,
+      "answers": 37,
+      "avg_decision_ms": 6500,
+      "changed_rate": 0.18,
+      "indifferent_rate": 0.11
+    }
+  ],
+  "computed_at": "2026-10-04T12:00:00+00:00"
+}

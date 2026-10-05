@@ -66,8 +66,8 @@ export default function Poll({ scenarios, demo, sessionId, onDone }) {
       ...getTelemetry(),                 // first_choice, decision_ms, hover_ms, changed_answer, final_select_ms, mouse_path
     }
     setSending(true)
-    const savedAt = await sendResponse(response, demo) // server time, or null if not saved
-    rememberAnswer(sessionId, response, savedAt) // for "How you compare" on the results page
+    const reply = await sendResponse(response, demo) // { saved_at, path } or null if not saved
+    rememberAnswer(sessionId, response, reply) // for "How you compare" on the results page
     setSending(false)
     setSelected(null)
     if (index + 1 < scenarios.length) setIndex(index + 1)
@@ -76,7 +76,11 @@ export default function Poll({ scenarios, demo, sessionId, onDone }) {
 
   return (
     <section className="poll">
-      <h1 ref={headingRef} tabIndex={-1}>What should the car do?</h1>
+      <h1 ref={headingRef} tabIndex={-1}>
+        What should the car do?
+        {/* screen readers hear which scenario this is when focus moves here */}
+        <span className="visually-hidden"> Scenario {index + 1} of {scenarios.length}.</span>
+      </h1>
       <p className="muted">Scenario {index + 1} of {scenarios.length} · Pick one, then confirm. You can switch first.</p>
 
       {/* resting the pointer on anything in a scene for 2 seconds shows what it is */}

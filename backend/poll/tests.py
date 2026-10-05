@@ -190,10 +190,13 @@ class NewFieldsTests(TestCase):
     def test_layout_position_and_path_are_saved(self):
         body = {**ANSWER, "stay_on_left": False, "position": 3, "final_select_ms": 200,
                 "mouse_path": [[0, 0.0, 0.5], [100, 0.5, 0.2], [200, 1.0, 0.5], [300, 0.0, 0.0]]}
-        self.assertEqual(self.post(body).status_code, 200)
+        reply = self.post(body)
+        self.assertEqual(reply.status_code, 200)
+        self.assertAlmostEqual(reply.json()["path"]["max_deviation"], 0.3, places=4)  # sent back to the page
         a = Response.objects.get()
         self.assertEqual((a.stay_on_left, a.position, a.final_select_ms), (False, 3, 200))
         self.assertEqual(len(a.mouse_path), 4)
+        self.assertAlmostEqual(self.client.get("/results").json()[0]["paths"]["avg_max_deviation"], 0.3, places=3)
         self.assertAlmostEqual(a.max_deviation, 0.3, places=4)  # measured only up to the final click
         self.assertEqual(a.x_flips, 0)
 
@@ -342,3 +345,36 @@ class OneAnswerTests(TestCase):
         self.post(ANSWER)
         self.assertNotIn("already_answered", self.post({**ANSWER, "scenario_id": "s2"}).json())
         self.assertEqual(Response.objects.count(), 2)
+
+
+# ---------- insights and path averages ----------
+
+class InsightsTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        Scenario.objects.create(id="s1", data={**SCENARIO, "id": "s1"})
+        Scenario.objects.create(id="s2", data={**SCENARIO, "id": "s2"})
+
+    def post(self, **fields):
+        body = {**ANSWER, **fields}
+        return self.client.post("/response", json.dumps(body), content_type="application/json")
+
+    def test_left_side_share_and_positions(self):
+        # chose A shown on the left; chose B shown on the left; chose A shown on the right; indifferent
+        self.post(session_id="p1", scenario_id="s1", choice="A", stay_on_left=True, position=1, decision_ms=3000)
+        self.post(session_id="p2", scenario_id="s1", choice="B", stay_on_left=False, position=1, decision_ms=1000)
+        self.post(session_id="p3", scenario_id="s1", choice="A", stay_on_left=False, position=2, decision_ms=5000)
+        self.post(session_id="p4", scenario_id="s1", choice="I", stay_on_left=True, position=2, decision_ms=7000)
+        data = self.client.get("/insights").json()
+        self.assertEqual({k: data["side"][k] for k in ("answers", "chose_left")}, {"answers": 3, "chose_left": 2})
+        self.assertAlmostEqual(data["side"]["left_share"], 0.667, places=3)
+        self.assertEqual([(p["position"], p["answers"], p["avg_decision_ms"]) for p in data["by_position"]],
+                         [(1, 2, 2000), (2, 2, 6000)])
+        self.assertEqual(data["by_position"][1]["indifferent_rate"], 0.5)
+
+    def test_results_include_path_averages(self):
+        self.post(session_id="p1", mouse_path=[[0, 0.0, 0.5], [100, 0.5, 0.2], [200, 1.0, 0.5]], final_select_ms=200)
+        self.post(session_id="p2")  # no path (touch screen)
+        [row] = self.client.get("/results").json()
+        self.assertEqual(row["paths"]["answers"], 1)
+        self.assertAlmostEqual(row["paths"]["avg_max_deviation"], 0.3, places=3)

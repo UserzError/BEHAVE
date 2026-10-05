@@ -18,7 +18,8 @@ export async function loadScenarios() {
   }
 }
 
-// Returns the server's saved_at time if the answer was saved, or null if it wasn't.
+// Returns the server's reply if the answer was saved ({ saved_at, path: {path_length, max_deviation, x_flips} }),
+// or null if it wasn't.
 export async function sendResponse(response, demo) {
   if (demo) {
     console.log('Demo mode — would POST /response:', response)
@@ -36,7 +37,7 @@ export async function sendResponse(response, demo) {
       return null
     }
     const data = await res.json().catch(() => ({}))
-    return data.saved_at ?? new Date().toISOString()
+    return { saved_at: data.saved_at ?? new Date().toISOString(), path: data.path ?? null }
   } catch (err) {
     // Keep the participant moving even if one save fails.
     console.error('POST /response failed:', err)
@@ -47,12 +48,14 @@ export async function sendResponse(response, demo) {
 // Results page data: vote counts per scenario (/results) plus titles and labels (/scenarios).
 export async function loadResults() {
   try {
-    const [results, scenarios] = await Promise.all([getJSON('/results'), getJSON('/scenarios')])
-    return { results, scenarios, demo: false }
+    const [results, scenarios, insights] = await Promise.all([getJSON('/results'), getJSON('/scenarios'), getJSON('/insights')])
+    return { results, scenarios, insights, demo: false }
   } catch (err) {
     console.warn('Backend not reachable, using sample results:', err)
-    const [results, scenarios] = await Promise.all([getJSON('/sample-results.json'), getJSON('/sample-scenarios.json')])
-    return { results, scenarios, demo: true }
+    const [results, scenarios, insights] = await Promise.all([
+      getJSON('/sample-results.json'), getJSON('/sample-scenarios.json'), getJSON('/sample-insights.json').catch(() => null),
+    ])
+    return { results, scenarios, insights, demo: true }
   }
 }
 

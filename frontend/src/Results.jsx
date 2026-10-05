@@ -5,6 +5,7 @@ import { Bar } from 'react-chartjs-2'
 import { loadResults } from './api.js'
 import { loadMyAnswers } from './myAnswers.js'
 import YourComparison from './YourComparison.jsx'
+import { CharacterHesitation, CloseCalls, DesignChecks } from './InsightCharts.jsx'
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 ChartJS.defaults.font.family = 'system-ui, -apple-system, "Segoe UI", sans-serif'
@@ -38,7 +39,9 @@ function buildRows(results, scenarios) {
       const total = votes.A + votes.B + votes.I
       const pctA = total ? Math.round((votes.A / total) * 100) : 0
       const pctI = total ? Math.round((votes.I / total) * 100) : 0
+      const types = s ? ['stay', 'swerve'].flatMap((o) => s.outcomes[o].group.map((p) => p.type)) : []
       return {
+        types, // characters in this scenario (for "Who makes people hesitate?")
         ...r,
         name: `Scenario ${i + 1}`,
         title: s ? s.title : `${r.scenario_id} (deleted)`,
@@ -81,6 +84,7 @@ export default function Results() {
     B: cssVar('--blue'),
     I: '#898781', // neutral gray for "no preference"
     time: dark ? '#9085e9' : '#4a3aa7', // violet, so it isn't mistaken for option B
+    faster: dark ? '#5fae8f' : '#2f7d5f', // green: faster than average (the "who hesitates" chart)
     surface: cssVar('--surface'),
     text: cssVar('--text-muted'),
     grid: dark ? '#2c2c2a' : '#e1e0d9',
@@ -182,6 +186,12 @@ export default function Results() {
             </div>
           </div>
 
+          <h2 className="section-heading">Looking closer</h2>
+          <p className="muted">What the timing and mouse data add to the votes.</p>
+          <CloseCalls rows={rows} colors={colors} dark={dark} />
+          <CharacterHesitation rows={rows} colors={colors} dark={dark} />
+          <DesignChecks insights={data.insights} colors={colors} dark={dark} />
+
           <div className="card">
             <h2>All numbers</h2>
             <div className="table-wrap">
@@ -196,6 +206,7 @@ export default function Results() {
                     <th className="num">Indifferent</th>
                     <th className="num">Avg. decision</th>
                     <th className="num">Changed mind</th>
+                    <th className="num" title="How far mouse paths bent away from a straight line, on average">Path bend</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -209,6 +220,7 @@ export default function Results() {
                       <td className="num">{r.votes.I} ({r.pctI}%)</td>
                       <td className="num">{r.avgSeconds} s</td>
                       <td className="num">{Math.round(r.changed_rate * 100)}%</td>
+                      <td className="num">{r.paths?.avg_max_deviation != null ? r.paths.avg_max_deviation.toFixed(2) : '–'}</td>
                     </tr>
                   ))}
                 </tbody>
