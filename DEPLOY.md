@@ -65,6 +65,8 @@ Do this whenever you change the site or the scenarios, then update the server (s
    POSTGRES_PORT=YOUR_PG_PORT
    TRUST_X_FORWARDED_FOR=true
    DB_CONN_MAX_AGE=60
+   # full mouse paths are deleted after this many days; 0 = never store them
+   MOUSE_PATH_DAYS=30
    EOF
    grep ADMIN_TOKEN .env   # copy this value somewhere safe: it unlocks the scenario designer
    ```

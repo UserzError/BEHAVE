@@ -378,3 +378,60 @@ class InsightsTests(TestCase):
         [row] = self.client.get("/results").json()
         self.assertEqual(row["paths"]["answers"], 1)
         self.assertAlmostEqual(row["paths"]["avg_max_deviation"], 0.3, places=3)
+
+
+# ---------- trimming old mouse paths ----------
+
+PATH = [[0, 0.0, 0.5], [100, 0.5, 0.2], [200, 1.0, 0.5]]
+
+
+class TrimPathTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        Scenario.objects.create(id="s1", data={**SCENARIO, "id": "s1"})
+
+    def post(self, session_id):
+        body = {**ANSWER, "session_id": session_id, "mouse_path": PATH, "final_select_ms": 200}
+        return self.client.post("/response", json.dumps(body), content_type="application/json")
+
+    def test_old_paths_are_trimmed_but_their_numbers_kept(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        from poll.queries import trim_mouse_paths
+        self.post("old")
+        self.post("new")
+        Response.objects.filter(session_id="old").update(created_at=timezone.now() - timedelta(days=31))
+        self.assertEqual(trim_mouse_paths(30), 1)
+        old, new = Response.objects.get(session_id="old"), Response.objects.get(session_id="new")
+        self.assertIsNone(old.mouse_path)
+        self.assertAlmostEqual(old.max_deviation, 0.3, places=4)  # the numbers stay
+        self.assertEqual(len(new.mouse_path), 3)
+        self.assertEqual(trim_mouse_paths(30), 0)  # nothing left to trim
+
+    def test_limit_caps_one_batch(self):
+        from poll.queries import trim_mouse_paths
+        for i in range(3):
+            self.post(f"p{i}")
+        self.assertEqual(trim_mouse_paths(0, limit=2), 2)
+        self.assertEqual(Response.objects.filter(mouse_path__isnull=False).count(), 1)
+
+    def test_zero_days_never_stores_paths(self):
+        with self.settings(MOUSE_PATH_DAYS=0):
+            reply = self.post("p1").json()
+        a = Response.objects.get()
+        self.assertIsNone(a.mouse_path)
+        self.assertAlmostEqual(a.max_deviation, 0.3, places=4)
+        self.assertAlmostEqual(reply["path"]["max_deviation"], 0.3, places=4)
+
+    def test_csv_tells_trimmed_paths_from_none(self):
+        import csv as csv_module
+        import io
+        from poll.queries import trim_mouse_paths, write_answers_csv
+        self.post("trimmed")
+        self.client.post("/response", json.dumps({**ANSWER, "session_id": "touch"}), content_type="application/json")
+        trim_mouse_paths(0)
+        out = io.StringIO()
+        write_answers_csv(out)
+        rows = {r["session_id"]: r for r in csv_module.DictReader(io.StringIO(out.getvalue()))}
+        column = next(c for c in rows["touch"] if "point" in c)
+        self.assertEqual((rows["trimmed"][column], rows["touch"][column]), ("", "0"))

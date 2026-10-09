@@ -35,7 +35,7 @@ class Response(models.Model):
     position = models.PositiveIntegerField(null=True)       # 1 = the first scenario this person saw
 
     # Mouse tracking (optional; empty on touch screens). See trajectory.py.
-    mouse_path = models.JSONField(null=True)                # [[t_ms, x, y], ...], x/y relative to the options area
+    mouse_path = models.JSONField(null=True)                # [[t_ms, x, y], ...]; deleted after MOUSE_PATH_DAYS
     final_select_ms = models.IntegerField(null=True)        # when they clicked their final choice
     path_length = models.FloatField(null=True)
     max_deviation = models.FloatField(null=True)
@@ -48,6 +48,11 @@ class Response(models.Model):
         constraints = [
             # One answer per participant per scenario. A repeat (double click, retried request) keeps the first.
             models.UniqueConstraint(fields=["session_id", "scenario_id"], name="one_answer_per_scenario"),
+        ]
+        indexes = [
+            # Only answers that still have a full mouse path, so trim_mouse_paths finds old ones quickly
+            # (the index shrinks as paths are trimmed).
+            models.Index(fields=["created_at"], condition=models.Q(mouse_path__isnull=False), name="paths_to_trim"),
         ]
 
     def __str__(self):

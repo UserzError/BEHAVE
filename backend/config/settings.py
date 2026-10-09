@@ -61,6 +61,10 @@ RESPONSE_RATE_WINDOW_SECONDS = int(env("RESPONSE_RATE_WINDOW_SECONDS", "600"))
 # view (0 turns the cache off). Each answer and each results snapshot carry a timestamp, so the
 # "How you compare" page knows whether your own answer is already in the totals.
 RESULTS_CACHE_SECONDS = int(env("RESULTS_CACHE_SECONDS", "15"))
+# Full mouse paths (every point) are kept this many days, then deleted; each answer keeps its three
+# path numbers (length, bend, direction changes) for good. Paths are most of the database's size.
+# 0 = never store full paths at all.
+MOUSE_PATH_DAYS = int(env("MOUSE_PATH_DAYS", "30"))
 # Behind a hosting proxy every request seems to come from the proxy; set this to true there so the
 # visitor's real address is read from the X-Forwarded-For header instead.
 TRUST_X_FORWARDED_FOR = env("TRUST_X_FORWARDED_FOR", "false").lower() == "true"

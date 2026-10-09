@@ -109,6 +109,8 @@ def response(request):
         return error(problem)
     path = data.get("mouse_path") or None
     path_summary = summarize(path, data.get("final_select_ms"))  # path_length, max_deviation, x_flips
+    if settings.MOUSE_PATH_DAYS == 0:
+        path = None  # keep only the numbers above (see MOUSE_PATH_DAYS in settings.py)
     try:
         with transaction.atomic():  # so a refused duplicate doesn't break the rest of the request
             Response.objects.create(
@@ -132,6 +134,8 @@ def response(request):
         return JsonResponse({"ok": True, "already_answered": True, "saved_at": first.created_at.isoformat(),
                              "path": {"path_length": first.path_length, "max_deviation": first.max_deviation,
                                       "x_flips": first.x_flips}})
+    if random.random() < 0.01:  # now and then, delete full mouse paths older than MOUSE_PATH_DAYS
+        queries.trim_mouse_paths(limit=500)
     # saved_at lets the results page know whether this answer is in a (cached) results snapshot yet;
     # path lets "How you compare" show your mouse-path measures without recalculating them.
     return JsonResponse({"ok": True, "saved_at": timezone.now().isoformat(), "path": path_summary})

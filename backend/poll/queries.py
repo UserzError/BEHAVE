@@ -1,5 +1,6 @@
 """queries.py - the database work that's more than a one-liner."""
 import csv
+from datetime import timedelta
 
 from django.conf import settings
 from django.core.cache import cache
@@ -146,6 +147,14 @@ CSV_COLUMNS = [
 ]
 
 
+def path_points(answer):
+    """CSV "path points": how many points were recorded. Blank if the path was trimmed (it had one,
+    but only its numbers are kept now), 0 if there never was one (touch screen, simulated)."""
+    if answer.mouse_path:
+        return len(answer.mouse_path)
+    return "" if answer.path_length is not None else 0
+
+
 def write_answers_csv(file, include_simulated=False):
     """Write every answer as a CSV row to `file` (anything with .write). Returns how many rows."""
     titles = {s.id: s.data for s in Scenario.objects.all()}
@@ -169,10 +178,21 @@ def write_answers_csv(file, include_simulated=False):
             a.decision_ms, hover.get("A", ""), hover.get("B", ""), hover.get("I", ""),
             "" if a.stay_on_left is None else a.stay_on_left, a.position or "",
             "" if a.final_select_ms is None else a.final_select_ms,
-            len(a.mouse_path) if a.mouse_path else 0,
+            path_points(a),
             "" if a.path_length is None else a.path_length,
             "" if a.max_deviation is None else a.max_deviation,
             "" if a.x_flips is None else a.x_flips,
         ])
         count += 1
     return count
+
+
+def trim_mouse_paths(days=None, limit=None):
+    """Delete full mouse paths older than `days` (default MOUSE_PATH_DAYS), keeping each answer's path
+    numbers (path_length, max_deviation, x_flips). `limit` caps how many answers are changed in one go.
+    Returns how many were trimmed."""
+    days = settings.MOUSE_PATH_DAYS if days is None else days
+    old = Response.objects.filter(mouse_path__isnull=False, created_at__lt=timezone.now() - timedelta(days=days))
+    if limit:
+        old = Response.objects.filter(pk__in=list(old.values_list("pk", flat=True)[:limit]))
+    return old.update(mouse_path=None)
