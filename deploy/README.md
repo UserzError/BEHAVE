@@ -128,8 +128,23 @@ Cloudflare Tunnel needs no inbound rule: the VM connects out.
 
 ## 9. Cloudflare Tunnel (the public door)
 
-1. **Put the domain on Cloudflare** (free plan): add the site in the Cloudflare dashboard, then change the
-   domain's nameservers at your registrar to the two Cloudflare gives you. This can take a few hours.
+1. **Put the domain's DNS on Cloudflare** (free plan). The domain stays registered (and renewed) at Porkbun;
+   only the DNS moves. A tunnel on your own domain needs this: the free plan can't take over just a subdomain.
+   - **Add the site in Cloudflare.** It scans your current DNS records: compare its list with Porkbun's DNS page
+     (Domain Management → **DNS** on the domain) and add anything missing.
+   - **If Porkbun's DNSSEC is on, turn it off first** (Domain Management → **Details** → DNSSEC). Leaving it on
+     during the switch makes the domain stop resolving for many visitors. You can turn it on again later from
+     Cloudflare (DNS → Settings), which gives you a DS record to paste back into Porkbun.
+   - **Change the nameservers at Porkbun:** Domain Management → **Details** → **Authoritative Nameservers**:
+     replace Porkbun's (`*.ns.porkbun.com`) with the two Cloudflare shows you. Usually active within minutes to a
+     few hours; Cloudflare emails you when it is.
+   - **What can break:** after the switch, Porkbun's DNS page no longer does anything, so
+     - **Porkbun email forwarding** needs its MX records (`fwd1.porkbun.com`, `fwd2.porkbun.com`) and SPF TXT
+       record copied into Cloudflare, or mail to the domain stops arriving;
+     - **Porkbun URL forwarding** stops (recreate it as a Cloudflare redirect rule);
+     - any other subdomains or verification TXT records must exist in Cloudflare.
+
+     If the domain isn't used for anything else yet, none of this applies.
 2. In the dashboard go to **Zero Trust → Networks → Tunnels → Create a tunnel → Cloudflared**, and name it `behave`.
 3. Choose **Debian, 64-bit**, and run the install commands it shows on the VM. The last one is
    `sudo cloudflared service install <long token>`. Treat that token like a password.
