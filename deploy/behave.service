@@ -1,0 +1,37 @@
+# systemd service: runs the backend with gunicorn, starts it at boot, restarts it if it crashes.
+# Installed as /etc/systemd/system/behave.service (see "Your own server" in DEPLOY.md).
+#   sudo systemctl status behave       is it running?
+#   sudo journalctl -u behave -f       its log (requests are logged without visitors' IPs)
+
+[Unit]
+Description=BEHAVE poll (gunicorn)
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+User=behave
+Group=behave
+WorkingDirectory=/srv/behave/backend
+# Only nginx talks to gunicorn, on this machine.
+Environment=HOST=127.0.0.1
+Environment=PORT=5000
+ExecStart=/srv/behave/backend/venv/bin/gunicorn config.wsgi
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=3
+
+# Sandboxing: the app only needs to read its own code and talk to PostgreSQL.
+NoNewPrivileges=true
+ProtectSystem=strict
+# PostgreSQL's socket: the app logs in as the behave user over it, with no password.
+ReadWritePaths=/run/postgresql
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

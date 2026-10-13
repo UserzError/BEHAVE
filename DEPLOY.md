@@ -8,6 +8,9 @@ the host keeps running. That's the main thing to check when choosing a host:
   apply, but the clicks differ. Avoid hosts whose disk is wiped on restart *unless* the database is a separate
   managed Postgres service.
 
+> **Your own Linux server or VM** (e.g. Ubuntu on Proxmox), public through a Cloudflare Tunnel with the designer
+> kept to Tailscale: see **[deploy/README.md](deploy/README.md)** instead of the steps below.
+
 > These steps haven't been tried on a live host yet. If something doesn't match, the host's error log usually says why.
 
 Replace `YOURNAME` below with your PythonAnywhere username.
